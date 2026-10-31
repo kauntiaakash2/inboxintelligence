@@ -1,6 +1,6 @@
 # Roadmap and evidence gates
 
-Status refers to implementation scope; consult ../quality/VERIFICATION.md for checks actually executed. No dates or user outcomes are promised.
+Status refers to implementation scope; consult ../quality/VERIFICATION.md for checks actually executed. No dates or user outcomes are promised. Phases 0 and 1 passed their documented local verification gates on 2026-10-31; Phases 2–10 remain planned.
 
 | Phase | Milestone and dependency                                                  | Exit criteria                                                                                                          | Validation evidence                                                                          |
 | ----- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |

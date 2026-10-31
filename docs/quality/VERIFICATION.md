@@ -18,7 +18,7 @@
 | npm audit --json                                         | Exit 1: **12 moderate development-tool findings**, propagated from minimatch glob amplification advisory GHSA-g3hv-75wg-m249. No high/critical reported. No force downgrade or incompatible major override.                                                                                                                 |
 | Frontend evidence checker                                | Passed: local report complete and referenced screenshots exist. This validates record completeness, not visual quality. Screenshots were separately inspected.                                                                                                                                                              |
 
-Final formatting, document-link/required-file checks and local Git checkpoint evidence are appended after execution below. GitHub Actions configuration is created, **not executed remotely**. No push, deployment, cloud resource or actual Gmail request occurred.
+Final formatting, document-link/required-file checks and local Git checkpoint evidence are recorded below. GitHub Actions configuration is created, **not executed remotely**. No push, deployment, cloud resource or actual Gmail request occurred.
 
 ## Browser assertions and inspected artifacts
 
@@ -41,4 +41,18 @@ Initial type check lacked vite/client side-effect CSS import types; added vite-e
 
 ## Acceptance and limitations
 
-AC1–AC11 and AC13 passed in the described local scope. Required documentation/content/link scan and Git checkpoint are recorded below for AC12/AC14. Responsive smoke evidence covers two viewports and Chromium only. No Safari/Firefox, screen-reader certification, formal WCAG audit, cloud CI execution, Gmail authentication, real API behavior, IndexedDB, real classification accuracy or production efficiency were tested or claimed. The synthetic classifier remains a simple ordered rule prototype. Development-only dependency risk remains open and documented in the security design.
+AC1–AC14 passed in the described local scope. Documentation/content/link scan and Git checkpoint evidence for AC12/AC14 are recorded below. Responsive smoke evidence covers two viewports and Chromium only. No Safari/Firefox, screen-reader certification, formal WCAG audit, cloud CI execution, Gmail authentication, real API behavior, IndexedDB, real classification accuracy or production efficiency were tested or claimed. The synthetic classifier remains a simple ordered rule prototype. Development-only dependency risk remains open and documented in the security design.
+
+## Final repository checks and checkpoint
+
+- `npm run format:check`: passed; all matched files use the configured style.
+- Required-file validation: 36 requested root/document/config files present and nonempty; intentional LICENSE omission confirmed.
+- Markdown link validation: local links across all 37 Markdown documents resolve.
+- Limited credential-pattern scan: no Google API key, access-token or private-key literals detected in checked source/config/docs; this is not comprehensive secret detection.
+- `git diff --cached --check`: passed before checkpoint; 70 reviewed project files staged, with generated dependencies/build/browser/cache/coverage excluded.
+- Git initialized on scoped branch `feat/bootstrap`; existing configured identity preserved. Repository-local settings: core.autocrlf=input, pull.ff=only, fetch.prune=true.
+- Implementation checkpoint: **09b70c4**, `feat: bootstrap privacy-conscious inbox intelligence dashboard`. Commit succeeded; working tree was clean immediately afterward. This final evidence update is recorded in a follow-up documentation commit.
+- Tracked-artifact inspection found no .env secrets, local token JSON, node_modules, dist, coverage, browser binary or output paths. No remote is configured; no push or deployment occurred.
+- CI uses current official checkout/setup-node v7 examples with contents:read and credential persistence disabled. The workflow has not been executed on GitHub.
+
+The Phase 1 foundation is ready for the separately authorized Gmail integration milestone. Remaining development dependency advisories and the scope of accessibility/browser testing remain explicit limits.
