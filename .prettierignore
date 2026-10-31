@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+output
+.cache
+package-lock.json
+*.tsbuildinfo
