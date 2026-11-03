@@ -2,11 +2,11 @@
 
 ## Mission and current state
 
-Build explainable, privacy-conscious email intelligence: Understand → Classify → Prioritize → Optimize → Measure. Phase 2 defaults to 96 synthetic messages and implements explicit GIS authorization plus up to 100 Gmail metadata records. No persistence, AI model or backend exists. Real account verification is separate and requires explicit owner approval; automated Google services must remain mocked. Never describe planned work as implemented. Inspect relevant files and Git status before modifying anything; preserve existing changes.
+Build explainable, privacy-conscious email intelligence: Understand → Classify → Prioritize → Optimize → Measure. Phase 3A adds optional, user-declared onboarding to the Phase 2 synthetic/Gmail dashboard. Only the strictly validated preference allowlist persists under inbox-intelligence.preferences; tokens, mail and diagnostics remain memory-only. No AI model or backend exists. Real account verification is separate and requires explicit owner approval; automated Google services must remain mocked. Never describe planned work as implemented. Inspect relevant files and Git status before modifying anything; preserve existing changes.
 
 ## Architecture
 
-`domain/models.ts` is the application contract. `MockEmailRepository` validates and copies the fixture; `loadInbox` runs deterministic classification and session instrumentation; pure selectors and aggregators feed React. UI has Overview, Inbox explorer, Analytics, and Settings. Browser session memory is the only storage. GmailEmailRepository maps METADATA responses through gmailMetadata and shared domain validation; no snippets, bodies, attachments or write operations. GmailAuthorization holds private in-memory tokens; useMailbox isolates sources/sessions and aborts obsolete work. Never put raw Gmail responses or tokens into components.
+`domain/models.ts` is the application contract. `MockEmailRepository` validates and copies the fixture; `loadInbox` runs deterministic classification and session instrumentation; pure selectors and aggregators feed React. UI has Overview, Inbox explorer, Analytics, and Settings. Browser session memory holds mailbox and authorization data. PreferenceStore validates versioned declared choices in localStorage; pure personalization selectors reorder presentation without changing classification, retrieval or coverage. GmailEmailRepository maps METADATA responses through gmailMetadata and shared domain validation; no snippets, bodies, attachments or write operations. GmailAuthorization holds private in-memory tokens; useMailbox isolates sources/sessions and aborts obsolete work. Never put raw Gmail responses or tokens into components.
 
 ## Coding standards
 
@@ -35,3 +35,7 @@ Search and combined filters work; explanations and analytics are visible; mock l
 ## Teaching and uncertainty
 
 Explain each milestone through its problem, concept, chosen approach, alternatives, trade-offs, code walkthrough, mistakes, tests, industry use, and interview framing. Keep permanent lessons in `docs/learning`. State assumptions and inspect code or primary sources to resolve uncertainty. Ask concise questions only when the answer materially blocks safe progress. Never fill gaps with fabricated evidence.
+
+## Personalized onboarding boundary
+
+Inspect domain/preferences.ts, preferenceStore, usePreferences and onboarding selectors before changing setup. Goals override role defaults using existing category IDs only. All choices are optional; keep Gmail and dashboard usable. Never add mail, account identifiers, tokens, inferred traits or free text to the preference schema. Unknown schema versions fall back safely; an explicit migration must precede accepting another version. Clear only the app preference key. Test read/write/delete failures, keyboard use and source-state preservation. Run format:check and intercepted Chromium checks alongside the existing gates. Phase 3A changes must remain uncommitted until owner review, per the current instruction.

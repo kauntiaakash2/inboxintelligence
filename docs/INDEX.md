@@ -1,6 +1,6 @@
 # Documentation index
 
-Every document below describes this project. Implemented and planned behavior are distinguished throughout. Verification is local; no cloud deployment occurred. Phase 2 account-integration code is mock-verified; real-account access remains untested.
+Every document below describes this project. Implemented and planned behavior are distinguished throughout. Verification is local; no cloud deployment occurred. Phase 2 has mocked verification plus separately attributed owner-reported live observations. Phase 3A onboarding is verified with synthetic services; it performs no new real-account test.
 
 ## Root and bootstrap
 
@@ -89,3 +89,13 @@ Every document below describes this project. Implemented and planned behavior ar
 [ADR 0004](architecture/ADR/0004-browser-oauth-metadata-sample.md) records the chosen explicit token flow, bounded metadata policy, alternatives and consequences.
 
 [Live measurements](quality/LIVE_MEASUREMENTS.md) separates owner-reported actual-account observations from mocked tests and theoretical request arithmetic; pending values are explicitly unmeasured.
+
+## Phase 3A additions
+
+| Document                                                           | Purpose                                                                                                          |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| [ADR 0005](architecture/ADR/0005-optional-declared-preferences.md) | Optional declared setup, isolated localStorage, alternatives and limitations                                     |
+| [Phase 3A concepts](learning/PHASE3A_CONCEPTS.md)                  | Ten code-grounded form/state/storage/privacy/accessibility/metrics lessons, mapping tables and interview framing |
+| [Phase 3A change report](quality/PHASE3A_CHANGE_REPORT.md)         | Complete file inventory, review boundaries and recommended Phase 3B                                              |
+
+Phase 3A updates the existing PRD, roadmap, metrics, UX/design/screen inventory, privacy/security/threat model, architecture/data model/storage ADR, test strategy, verification and learning records. Historical Phase 1/2 command results remain attributed to their own runs.

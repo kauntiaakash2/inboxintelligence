@@ -16,3 +16,14 @@ Trust boundaries: mailbox/network JSON is not trusted because it came from Googl
 Security acceptance before real Gmail: no persistent access tokens, sanitized provider errors, denied/expired auth tests, zero remote email resources, account-switch cancellation, documented retention and scope review. Before SaaS: independent tenant authorization tests, restricted-scope compliance assessment, private incident channel and server credential design.
 
 Phase 2 additionally mitigates stale-callback/source races with attempt counters, source keys, aborts and local data clearing. Reconnect waits for revoke completion/deadline. Remote Google consent after cancellation, SDK compromise, extensions, devtools inspection and same-origin XSS remain risks; no browser-only app can hide a live credential from those actors.
+
+## Phase 3A STRIDE delta
+
+| Threat                                                                            | Mitigation                                                                                                                      | Remaining risk                                                                                          |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Tampering: poisoned preference JSON or invented category/version                  | Strict runtime allowlist, valid enum membership, canonical order and safe defaults; only existing suggested categories accepted | Local preference integrity is not authenticated; a valid malicious choice still changes presentation    |
+| Information disclosure: shared browser/profile backup exposes declared role/goals | Optional enum-only record, no account/mail/token fields, explicit clear control, no telemetry                                   | localStorage is readable by same-origin scripts and device users; user-declared choices may be personal |
+| Denial of service: malformed/oversized data or denied/quota storage               | 4096-character read cap, parse/storage catch, bounded arrays and tab-local fallback                                             | Browser getItem already allocates its string; this is not a browser-wide resource limit                 |
+| Elevation of privilege: personalization triggers mailbox writes or broader access | Pure presentation selectors, existing unchanged classifier/auth/GET-only adapter; fake Gmail preservation tests                 | Same-origin compromise retains the broader browser threat; schema validation does not sandbox code      |
+
+No mailbox persistence or new external trust boundary is introduced. Full email cache/export and multi-user preference identity remain separate future reviews.

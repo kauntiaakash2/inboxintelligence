@@ -1,4 +1,4 @@
-# Ten implementation-based interview questions and answers
+# Implementation-based interview questions and answers
 
 1. **Why a repository interface instead of calling Gmail in components?** EmailRepository.list returns normalized EmailMessage objects, so the same UI works with the mock source and a future validated Gmail adapter. Provider pagination/auth errors stay outside React rendering. The cost is one small abstraction with a clear replacement responsibility.
 
@@ -34,3 +34,13 @@ Practice each answer with the actual relevant function or ADR. Do not claim prod
 18. **How do you prevent stale mailbox data after disconnect?** Abort the load, invalidate its source/session key and clear retained result state. Detail selection stores an ID/key, so it cannot retain a separate private message object. Late callbacks/results are ignored.
 19. **Why block reconnect during revocation?** A delayed revoke can invalidate a newly issued token for the same app grant. Clear local state immediately and wait at most ten seconds for revocation before permitting a fresh flow.
 20. **What did the tests actually prove?** They verified the implemented lifecycle, request shapes and UI with fake services, including negative cases. They did not prove real consent configuration, account eligibility, live Gmail behavior, accuracy or API savings.
+
+## Phase 3A — five additional implementation questions
+
+21. **Why isolate a controlled draft from applied preferences?** Back/Continue can retain selections while Skip discards an edit without changing saved presentation. Confirmation is the only point that validates, saves and applies; React render/effects do not persist data or authorize Gmail.
+22. **Why validate localStorage when TypeScript already defines the schema?** Stored JSON can be malformed, obsolete or edited outside the app. Types are erased; exact runtime key/version/enum/array/subset validation returns a safe canonical object before use. Unsupported versions fall back without invented migrations.
+23. **Why localStorage here but IndexedDB later?** One small enum-only record needs simple persistence. A mailbox cache needs asynchronous indexed access, account isolation and transactions for messages/checkpoints, plus retention/deletion decisions. Neither browser store defeats same-origin XSS.
+24. **How do you personalize without changing classification or coverage?** Pure selectors copy/sort every record by existing priority bands, preferred category and date. Classification objects, discovery and all filter options remain intact. Tests compare IDs, identity and classifications and confirm preference edits create no Gmail requests.
+25. **How do you evaluate optional onboarding responsibly?** Use synthetic tests for correctness and separately consented usability/outcome evidence. Future opt-in aggregate completion/skip metrics need explicit denominators; skipping is legitimate and not failure. No profile/goal values need enter telemetry, and no activation or benefit is claimed from test results.
+
+Code walkthrough and alternatives: [Phase 3A concepts](PHASE3A_CONCEPTS.md).

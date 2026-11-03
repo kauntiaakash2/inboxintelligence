@@ -6,6 +6,10 @@ The format follows Keep a Changelog conventions; versions follow semantic versio
 
 ### Added
 
+- Phase 3A optional profile/goals/category onboarding, returning-user summary and settings edit/restart/reset controls.
+- Strict version-1 declared-preference localStorage boundary with safe defaults, key-scoped reset and failure notices.
+- Immutable display personalization, storage/form/Gmail-preservation tests, keyboard/mobile browser coverage and code-grounded learning notes.
+
 - Session-only client duration/API-attempt/retry diagnostics, retained-live-state checks and partial-failure refresh recovery tests.
 - Separate owner-reported live measurement record; account acceptance outcomes remain explicitly pending where unconfirmed.
 
@@ -24,6 +28,10 @@ The format follows Keep a Changelog conventions; versions follow semantic versio
 ## [0.1.0] - 2026-10-31
 
 ### Added
+
+- Phase 3A optional profile/goals/category onboarding, returning-user summary and settings edit/restart/reset controls.
+- Strict version-1 declared-preference localStorage boundary with safe defaults, key-scoped reset and failure notices.
+- Immutable display personalization, storage/form/Gmail-preservation tests, keyboard/mobile browser coverage and code-grounded learning notes.
 
 - Browser-first dashboard with 96 synthetic messages, four views, combined filters, and explanatory message details.
 - Ordered rule classification, unknown fallback, sender/category/priority/date aggregation and bounded instrumentation.

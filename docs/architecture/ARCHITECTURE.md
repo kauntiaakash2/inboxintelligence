@@ -64,3 +64,22 @@ GmailAuthorization exposes only safe status snapshots to React. Its token never 
 ## Aggregate measurement boundary
 
 GmailEmailRepository now counts actual fetch invocations by list/metadata operation and actual retries. useMailbox measures the load/classification duration with a monotonic clock and passes numeric summaries to GmailDiagnostics. Per-run data is session-only, replaced on refresh and cleared on disconnect. A retained-live-result count provides privacy-safe state-clearing evidence; no private data/debug/token accessor is exposed. The live owner-run measurement record is separate from fixture metrics and automated test durations.
+
+## Phase 3A declared preference flow
+
+```mermaid
+flowchart LR
+  User[Explicit setup or Settings action] --> Draft[Controlled form draft]
+  Draft --> Validate[Strict version 1 validation]
+  Validate --> Store[PreferenceStore / one localStorage key]
+  Store --> Hook[usePreferences / safe in-memory fallback]
+  Hook --> Display[Pure display-order selectors]
+  Classified[Existing classified messages and full aggregates] --> Display
+  Display --> UI[All messages and categories remain available]
+```
+
+`domain/preferences.ts` defines declared choice unions and the versioned schema. `features/onboarding/personalize.ts` owns documented role/goal mappings and immutable sorting. `PreferenceStore` is the storage boundary; `usePreferences` owns applied choices/notices. `OnboardingWizard` isolates unsaved drafts; `PersonalizationPanel` and `PreferenceSettings` render summaries/actions. App integrates these without replacing useMailbox, auth, classifier or repositories.
+
+Read preferences lazily on mount; do not write in a React effect or auto-connect Gmail. Save/skip/reset are explicit events. Schema errors use defaults; read/write/delete exceptions remain content-free. Unsupported versions are preserved but ignored until explicit save/reset; a future migration must validate input and output. Version 1 is the first preference schema, so there is no legacy migration to invent.
+
+Browser localStorage is the sole durable exception for declared preferences, separate from session-only mail/token/metrics. No IndexedDB, server/profile API, external transfer, cross-tab listener or account association is implemented. One small synchronous string is appropriate here; transactional mail/checkpoint storage remains the responsibility of a future account-scoped IndexedDB layer. See ADR 0005.

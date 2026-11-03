@@ -2,7 +2,7 @@
 
 An explainable, privacy-conscious email analytics product prototype. **Understand → Classify → Prioritize → Optimize → Measure.** The problem is attention overload: important messages compete with routine notifications, while naive integrations fetch more content than they need.
 
-Phase 2 keeps **96 synthetic messages** as the default and adds explicit read-only Gmail authorization for the newest **up to 100 metadata records**. Live account access has not been exercised by the agent; automated verification uses mocked Google services. It explores sender and subject rules, priorities, category distribution, and a simulated retrieval policy. It is not a generic email client or an AI model.
+Phase 3A adds optional personalized onboarding. The app keeps **96 synthetic messages** as the default and adds explicit read-only Gmail authorization for the newest **up to 100 metadata records**. Live account access has not been exercised by the agent; automated verification uses mocked Google services. It explores sender and subject rules, priorities, category distribution, and a simulated retrieval policy. It is not a generic email client or an AI model.
 
 ## Capabilities
 
@@ -41,7 +41,7 @@ Open the printed localhost URL. `npm ci` reproduces the committed lockfile; the 
 
 Open the exact local origin registered for the OAuth client on port 5173; `localhost` and `127.0.0.1` are distinct origins. Google Cloud project/client configuration is owner-managed and was not modified. Click **Connect Gmail** to load GIS, then **Authorize Gmail** to open Google's chooser/consent from a fresh user gesture. Only `https://www.googleapis.com/auth/gmail.readonly` is requested; included previous scopes are disabled. No silent authorization occurs on load or refresh.
 
-The app follows message-list pagination until it selects 100 unique IDs or the listing ends, then retrieves `format=METADATA` with only From/Subject/Date headers, labels and internalDate. No bodies, snippets or attachments are requested. Live search uses sender and subject; mock search retains snippets. Messages sort newest first by internalDate. Partial failures are counted without exposing provider errors. Missing metadata may render Unknown sender/(No subject); complex encoded address headers are not fully decoded.
+The app follows message-list pagination until it selects 100 unique IDs or the listing ends, then retrieves `format=METADATA` with only From/Subject/Date headers, labels and internalDate. No bodies, snippets or attachments are requested. Live search uses sender and subject; mock search retains snippets. Messages default to newest first by internalDate. When declared focus is enabled, display sorting keeps High/Medium/Low rule-priority bands first, then preferred category order and date; stored classifications stay unchanged. Partial failures are counted without exposing provider errors. Missing metadata may render Unknown sender/(No subject); complex encoded address headers are not fully decoded.
 
 Tokens, messages and metrics stay in page memory. Disconnect aborts work, clears live state, returns to mock and requests Google grant revocation. Revocation can affect the app's entire Google grant; if confirmation fails, the UI explains how to remove access in Google Account permissions. Reload clears local authorization but does not itself revoke Google consent. Remote revocation is detected on the next 401 response or expiry, not through background polling.
 
@@ -75,7 +75,7 @@ Implemented: mock dashboard plus explicit GIS authorization, a bounded Gmail met
 
 ## Roadmap and contribution
 
-Next: owner-approved manual consent/import/disconnect validation. Then: resumable import, history sync, adaptive retrieval, corrections and measured evaluation. [Roadmap](docs/product/ROADMAP.md) has dependencies and exit criteria.
+Next recommendation: Phase 3B preference usability, portability and aggregate measurement design. Historical import, history sync, adaptive retrieval and corrections remain separate planned milestones with persistence/privacy gates. [Roadmap](docs/product/ROADMAP.md) has dependencies and exit criteria.
 
 Read [CONTRIBUTING](CONTRIBUTING.md) and [AGENTS](AGENTS.md) before changes. Run checks and document actual evidence. The owner has not chosen a license; **no LICENSE file is granted**. See [licensing decision](docs/LICENSING.md).
 
@@ -88,3 +88,13 @@ Read [CONTRIBUTING](CONTRIBUTING.md) and [AGENTS](AGENTS.md) before changes. Run
 `npm run dev` uses http://127.0.0.1:5173 with strictPort enabled, preserving a stable OAuth origin. The owner confirmed this is the registered JavaScript origin; localhost is a different hostname. No Google configuration or credential was changed. The intercepted Playwright suite still explicitly uses port 4101 with a fake public client ID; it is separate from live acceptance.
 
 After a Gmail run, the current-run diagnostics panel shows only monotonic load/classification duration and API/list/metadata fetch-attempt/retry counts. It excludes consent/paint, contains no private message/token fields, resets on refresh and clears on disconnect. A single run is not a benchmark or proof of optimization. The aggregate root attribute data-retained-live-message-count supports checking actual mailbox-result cleanup without exposing content.
+
+## Optional personalized setup — Phase 3A
+
+The dashboard opens immediately with a dismissible setup invitation. Choose **Set up your view**, optionally select one of five profiles and any of six goals, review the suggested existing categories, then confirm. You may leave everything blank, disable every suggestion or choose **Skip setup**. Goals replace role defaults; this deterministic mapping is explained in [the Phase 3A guide](docs/learning/PHASE3A_CONCEPTS.md). No email-derived profile is inferred.
+
+Enabled focus categories reorder category charts/controls and messages within existing rule-priority bands. Every message and category remains available to search and filters; retrieval, classification scores, Gmail labels and OAuth scopes stay unchanged. Settings offers Change profile, Change goals, Manage suggested categories, Restart onboarding and Clear preferences. Editing uses a draft; skipping an edit preserves saved choices.
+
+Only schema version, completed/skipped status, declared profile, goals and enabled categories persist in the origin-local `inbox-intelligence.preferences` key. No mailbox/account/token field is accepted. Preferences survive disconnect and reload; Gmail authorization and messages do not survive reload. Browser storage errors are explained and fall back to tab-local choices. Reset removes only this key; it does not disconnect Gmail. Unsupported schemas are ignored until explicitly reset or replaced. Preferences apply to this browser origin, not an account, device network or Google profile. No cross-tab synchronization or cloud portability exists.
+
+See [Phase 3A change report](docs/quality/PHASE3A_CHANGE_REPORT.md), [verification](docs/quality/VERIFICATION.md) and [ADR 0005](docs/architecture/ADR/0005-optional-declared-preferences.md). No dependencies or OAuth settings changed; this implementation awaits review and is not committed.

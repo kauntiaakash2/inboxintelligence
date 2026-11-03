@@ -1,6 +1,6 @@
 # Product requirements — Inbox Intelligence
 
-Status: Phase 2 browser authorization/metadata sample implemented and mock-verified; real-account verification pending. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
+Status: Phase 3A optional onboarding implemented and locally verified. Phase 2 browser authorization/metadata sample remains implemented, with mocked checks and separately attributed owner-reported live observations. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
 
 ## 1. Problem statement
 
@@ -92,3 +92,16 @@ Phases 0–1 foundation; 2 authorized latest 100; 3 historical import; 4 increme
 ## Phase 2 implementation addendum — 2026-11-02
 
 FR11 (explicit read-only authorization) and a bounded part of FR12 (up to 100 listed IDs) are implemented with mocked verification. Default mock exploration remains available. Live UI exposes source, progress, selected/loaded/failed counts, excluded Spam/Trash and partial mailbox coverage. No durable full index, bodies, attachments, mailbox writes, silent authorization, correction learning or product accuracy result is included. A real account test and full sync remain separate exit gates; this does not turn the prototype into a personal-production MVP.
+
+## Phase 3A requirements — optional declared personalization
+
+Current scope extends Phase 2 with optional onboarding; the original Phase 1 MoSCoW table remains a historical scope description. Role/persona usefulness is still an assumption rather than validated research. Existing owner-reported Phase 2 live observations are in the verification record; no new live test is part of Phase 3A.
+
+- **Must:** nonblocking three-step setup, five optional profiles, six optional multi-select goals, review/toggle suggested existing categories, skip/back/continue and explicit save. Dashboard and Gmail remain accessible throughout.
+- **Must:** goals override role defaults, deterministic presentation only, all messages searchable, classifier scores and Gmail scope/retrieval untouched. Empty selections and all suggestions off are valid.
+- **Must:** versioned strict preference allowlist, safe read/write/reset failure behavior, returning-user state, settings edits/restart/reset and keyboard/mobile tests.
+- **Should:** explain suggestions, storage location and why profile is user-declared. Preserve drafts when navigating backward and saved choices when dismissing edits.
+- **Could, later:** explicit preference export/import and cross-tab updates with version handling.
+- **Won't:** infer traits, store mail/tokens, add classifier categories, add onboarding telemetry, access live mail automatically or claim onboarding increases activation.
+
+Journey: open dashboard → optionally start setup → declare profile/goals or leave blank → review/toggle categories → confirm → inspect reordered view → edit/reset in Settings. Skip remembers only a skipped marker with null/empty choices. Acceptance: reload restores saved presentation, every original message remains available, High rule priorities precede lower bands, reset returns default ordering, storage errors do not block access, and preference changes do not start/stop Gmail requests. Metrics and limitations: METRICS.md. Future portability must remain explicit and independent of mailbox data.

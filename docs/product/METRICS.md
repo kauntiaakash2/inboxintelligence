@@ -35,3 +35,19 @@ Live counters measure successful session-local metadata loads/classifications, n
 ## Live acceptance record
 
 Current-run API/list/metadata attempt counters and actual attempted retries are implemented. A monotonic client duration includes bounded retrieval and classification, excluding authorization and rendering. These values are shown without private content and reset per load; they do not measure provider quota units or optimization savings. Real-account reports belong in ../quality/LIVE_MEASUREMENTS.md with source provenance; they are pending until received.
+
+## Onboarding metrics design — Phase 3A
+
+No onboarding event collection, outbound telemetry, user cohort or measured conversion improvement is implemented. Tests are synthetic correctness evidence, not adoption data. Future optional aggregation needs explicit consent and an event allowlist that excludes declared profile/goal/category values, account identity and mail.
+
+| Proposed metric       | Definition / formula                                                         | Source and collection (planned)                     | Limitation / target                                                                |
+| --------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Setup start rate      | Explicit setup starts / dashboard visits offered setup                       | Opt-in aggregate start/offer counters               | Visits are not unique people; no target before baseline                            |
+| Setup completion      | Confirmed saves / explicit starts, same observation window                   | Content-free start/confirm counters                 | Direct Settings edits must be separated; not Gmail activation                      |
+| Skip rate             | Explicit skips / first-run invitations                                       | Offer/skip counters                                 | Skipping is a valid successful choice, not a product failure                       |
+| Step abandonment      | Starts reaching a step without confirmation / starts reaching it             | Aggregate step/confirm counters with defined window | Closing a tab, blocked storage and multi-tab activity confound interpretation      |
+| Time to complete      | Confirm time minus explicit start, excluding closed-tab time if measurable   | Monotonic session timers                            | Do not infer task benefit; no result collected                                     |
+| Preference durability | Successful browser saves / attempted saves                                   | Aggregate storage outcome codes only                | Browser eviction and later reset are separate; current UI reports failures locally |
+| Product usefulness    | Voluntary important-message task completion and reported effort before/after | Consented, matched-task study                       | Selection and recall bias; onboarding completion alone cannot prove time saved     |
+
+Existing activation remains a successful authorized metadata import, independently of setup. No user is required to declare a role to activate the product.

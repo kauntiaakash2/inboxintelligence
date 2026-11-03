@@ -33,6 +33,19 @@ import { summarize } from '../features/analytics/summarize'
 import { MessageList } from '../features/inbox/MessageList'
 import { MessageDetail } from '../features/inbox/MessageDetail'
 import { StatusPanel } from '../components/common/StatusPanel'
+import { PreferenceStore } from '../repositories/preferenceStore'
+import { usePreferences } from '../hooks/usePreferences'
+import {
+  OnboardingWizard,
+  type SetupStep,
+} from '../features/onboarding/OnboardingWizard'
+import { PersonalizationPanel } from '../features/onboarding/PersonalizationPanel'
+import { PreferenceSettings } from '../features/settings/PreferenceSettings'
+import {
+  orderCategories,
+  orderMessagesForDisplay,
+  enabledFocus,
+} from '../features/onboarding/personalize'
 const repository = new MockEmailRepository()
 type View = 'Overview' | 'Inbox explorer' | 'Analytics' | 'Settings'
 const navigation = [
@@ -44,11 +57,30 @@ const navigation = [
 export function App({
   emailRepository = repository,
   authorization: suppliedAuthorization,
+  preferenceStore: suppliedPreferenceStore,
 }: {
   emailRepository?: EmailRepository
   authorization?: GmailAuthorization
+  preferenceStore?: PreferenceStore
 }) {
   const [view, setView] = useState<View>('Overview')
+  const [preferenceStore] = useState(
+    () => suppliedPreferenceStore ?? new PreferenceStore(),
+  )
+  const personalization = usePreferences(preferenceStore)
+  const [editor, setEditor] = useState<{
+    step: SetupStep
+    generation: number
+  } | null>(null)
+  const [editorGeneration, setEditorGeneration] = useState(0)
+  const openSetup = (step: SetupStep = 1) => {
+    setEditorGeneration((value) => value + 1)
+    setEditor({ step, generation: editorGeneration + 1 })
+  }
+  const dismissSetup = () => {
+    if (!personalization.preferences) personalization.skip()
+    setEditor(null)
+  }
   const [authorization] = useState(
     () =>
       suppliedAuthorization ??
@@ -80,15 +112,24 @@ export function App({
   const setSelected = (message: ClassifiedMessage) =>
     setSelection({ id: message.id, key: mailbox.key })
   const stats = summarize(messages)
+  const displayCategories = orderCategories(
+    stats.categories,
+    personalization.preferences,
+  )
+  const displayMessages = orderMessagesForDisplay(
+    messages,
+    personalization.preferences,
+  )
+  const focusActive = enabledFocus(personalization.preferences).length > 0
   const metrics = calculateMetrics(
     mailbox.events,
     isLive ? 'real' : 'synthetic',
   )
   const chartColors = ['#46785c', '#9eae89', '#c1a66d', '#7d9991', '#a9b39b']
-  const categoryGradient = stats.categories
+  const categoryGradient = displayCategories
     .map((item, index) => {
       const start = stats.total
-        ? (stats.categories
+        ? (displayCategories
             .slice(0, index)
             .reduce((sum, entry) => sum + entry.count, 0) /
             stats.total) *
@@ -98,7 +139,7 @@ export function App({
       return `${chartColors[index % chartColors.length]} ${start}% ${end}%`
     })
     .join(', ')
-  const visible = selectMessages(messages, query, category, priority)
+  const visible = selectMessages(displayMessages, query, category, priority)
   const resetFilters = () => {
     setQuery('')
     setCategory('All')
@@ -241,6 +282,26 @@ export function App({
             </button>
           </div>
           <GmailConnection authorization={authorization} state={mailbox.auth} />
+          {editor ? (
+            <OnboardingWizard
+              key={editor.generation}
+              initial={personalization.preferences}
+              startStep={editor.step}
+              onSave={(preferences) => {
+                personalization.save(preferences)
+                setEditor(null)
+              }}
+              onDismiss={dismissSetup}
+            />
+          ) : (
+            <PersonalizationPanel
+              preferences={personalization.preferences}
+              notice={personalization.notice}
+              onStart={() => openSetup()}
+              onSkip={personalization.skip}
+            />
+          )}
+
           <div className="demo-banner">
             <Sparkles size={17} />
             <p>
@@ -391,7 +452,7 @@ export function App({
                         </div>
                       </div>
                       <div className="category-bars">
-                        {stats.categories.map((item, index) => (
+                        {displayCategories.map((item, index) => (
                           <button
                             key={item.name}
                             onClick={() => openCategory(item.name)}
@@ -423,7 +484,7 @@ export function App({
                       </div>
                       {
                         <MessageList
-                          items={messages
+                          items={displayMessages
                             .filter(
                               (message) =>
                                 message.classification.priority === 'High',
@@ -579,7 +640,7 @@ export function App({
                         }
                       >
                         <option value="All">All categories</option>
-                        {categories.map((name) => (
+                        {displayCategories.map(({ name }) => (
                           <option key={name}>{name}</option>
                         ))}
                       </select>
@@ -606,8 +667,10 @@ export function App({
                   <div className="results-heading">
                     <strong>{visible.length} messages</strong>
                     <span>
-                      {isLive ? 'Gmail sample' : 'Synthetic mailbox'} · newest
-                      first
+                      {isLive ? 'Gmail sample' : 'Synthetic mailbox'} ·{' '}
+                      {focusActive
+                        ? 'your focus within rule-priority bands'
+                        : 'newest first'}
                     </span>
                   </div>
                   {visible.length ? (
@@ -635,7 +698,7 @@ export function App({
                         <p>Number of messages per category · {sourceLabel}.</p>
                       </div>
                     </div>
-                    {stats.categories.map((item, index) => (
+                    {displayCategories.map((item, index) => (
                       <button
                         className="analytics-bar"
                         key={item.name}
@@ -646,7 +709,7 @@ export function App({
                           <span
                             className={`color-bg-${index % 5}`}
                             style={{
-                              width: `${(item.count / Math.max(...stats.categories.map((c) => c.count), 1)) * 100}%`,
+                              width: `${(item.count / Math.max(...displayCategories.map((c) => c.count), 1)) * 100}%`,
                             }}
                           />
                         </span>
@@ -752,6 +815,15 @@ export function App({
               )}
               {view === 'Settings' && (
                 <div className="settings-grid">
+                  <PreferenceSettings
+                    preferences={personalization.preferences}
+                    onEdit={(step) => openSetup(step)}
+                    onReset={() => {
+                      personalization.reset()
+                      setEditor(null)
+                    }}
+                  />
+
                   <section className="panel">
                     <div className="panel-heading">
                       <div>
@@ -816,7 +888,8 @@ export function App({
                       <li>No analytics or tracking services</li>
                     </ul>
                     <p>
-                      Reloading resets authorization and message state.
+                      Reloading resets authorization and message state. Declared
+                      personalization preferences persist locally until cleared.
                       Disconnect clears live data and requests revocation.
                       Export and durable storage controls remain planned.
                     </p>
@@ -830,7 +903,7 @@ export function App({
               <span className="footer-mark" /> Built for clarity. Designed for
               privacy.
             </span>
-            <span>Inbox Intelligence · Phase 2 preview</span>
+            <span>Inbox Intelligence · Phase 3A preview</span>
           </footer>
         </main>
       </div>

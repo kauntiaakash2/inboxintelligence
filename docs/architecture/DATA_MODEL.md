@@ -34,3 +34,19 @@ GmailCoverage: discovered = unique selected IDs (maximum 100), loaded = successf
 AuthorizationState exposes status, content-free message and version only. Token/expiry remain in private service fields. MailboxResult stores classified messages, safe error, event snapshot and coverage for one source/session key. Disconnect/expiration clears it; late request results are discarded. User selection stores only an ID/session key, avoiding a second retained message object. No IndexedDB schema or OAuth credential table was implemented.
 
 GmailRequestDiagnostics contains requestAttempts, listAttempts, metadataAttempts and retries (all numeric counts). MailboxResult also has nullable diagnostics/durationMs; neither is persisted. No URL, message identifier, credential, account reference or content field belongs in diagnostics. Retained live-record count is derived from the actual stored result source, including during cleanup, not merely the visible row list.
+
+## Phase 3A implemented preference schema
+
+`src/domain/preferences.ts` adds `UserPreferences`, independent of EmailMessage and account identity. One record is keyed by the constant `inbox-intelligence.preferences`; it needs no secondary indexes.
+
+| Field             | Meaning and validation                                                              | Privacy                                        |
+| ----------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------- |
+| schemaVersion     | Literal 1; unsupported versions ignored, explicit future migration required         | Configuration                                  |
+| status            | completed or skipped                                                                | Declared setup state                           |
+| profile           | null or student/professional/freelancer/general/prefer-not-to-say                   | Optional user-declared context, never inferred |
+| goals             | Unique enum array: important/deadlines/career/clutter/patterns/finance              | Declared interests, potentially personal       |
+| enabledCategories | Unique existing EmailCategory IDs, subset of current recommendations; all-off valid | Declared presentation preference               |
+
+An exact key allowlist rejects extra data. Skipped means null profile and empty arrays. Loaded/saved objects are copied and canonicalized using the deterministic goal/category mapping. No timestamps, stable user/device ID, account ID, message references, sender identifiers, credentials or free text belong here. `PreferenceDraft` omits version/status and exists only while the form is open. Step state is a 1|2|3 union, not a persisted processing percentage.
+
+Preferences have no relationship/foreign key to Gmail or classification records. The current category literal names remain their IDs; rename migration must be designed before changing them. Reset deletes this key only; unavailable storage falls back to tab state with a notice. Future device portability requires explicit validated export/import or a reviewed authenticated profile service; no such service exists. Mail caching and account-scoped schema evolution above remain planned.

@@ -33,3 +33,7 @@ Can you explain the current code without reading every line? Can you predict how
 ## Phase 2 implementation exercises
 
 [Phase 2 concepts](PHASE2_CONCEPTS.md) connects OAuth/public clients, memory tokens, browser activation, REST adapters, runtime validation, pagination, bounded retries and source-switch cancellation to the current code. The mocked exercises are now implemented; real consent acceptance remains a separate approved manual test. Run the current test suite rather than assuming the historical Phase 1 count is the current total.
+
+## Phase 3A practice sequence
+
+After the React/hooks and browser-security fundamentals, work through [Phase 3A concepts](PHASE3A_CONCEPTS.md): controlled form draft → lifecycle separation → serialization/runtime validation → versioned storage/error handling → pure ranking → native keyboard interaction → privacy/outcome metrics. Trace a finance goal from OnboardingWizard through PreferenceStore to orderMessagesForDisplay. Exercise blocked storage and reset in synthetic tests. Explain why a preference schema is not a mailbox cache design before starting IndexedDB. Next: validated preference portability and consented usability evaluation (proposed Phase 3B).

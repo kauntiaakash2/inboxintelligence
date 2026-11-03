@@ -136,3 +136,45 @@ Live coverage, first disconnect/revocation and explicit reconnect were owner-con
 This verification record accompanies the requested Phase 2 implementation checkpoint on feat/gmail-oauth. All 53 changed files were individually inventoried and staged only after branch/link/artifact checks. The exact commit is identified by Git history (`feat(gmail): add read-only OAuth, metadata integration and diagnostics`); the resulting hash is reported in the delivery response. No push or deployment is performed.
 
 Final live result provenance: owner-reported 100/100 load with zero failures, latest 17,061 ms, 101 client fetch attempts (one list plus 100 metadata), zero retries. Earlier 17,609-ms run remains separate. First disconnect explicitly confirmed Google revocation; reconnection succeeded; final local disconnect was reported. Final in-app SDK revocation confirmation was not observed, and the owner confirmed this app was not listed in Google Account connections. No claim of an independent account inspection or a diagnosed provider failure is made.
+
+## 2026-11-03 — Phase 3A optional declared onboarding
+
+### Baseline and boundary
+
+Initial inspection confirmed **feat/personalized-onboarding**, clean working tree and **4a06d27**. Read AGENTS, PRD/roadmap, design/UX, security/privacy, architecture, existing verification and actual React/mailbox state. React, MDN Web Storage and WAI form references are linked in ADR 0005 and PHASE3A_CONCEPTS.md. Existing source/configuration was preserved; no package, lockfile, Vite/OAuth configuration or credential file changed. This milestone uses only synthetic mail and intercepted Google services. Phase 2 owner-reported live measurements above are historical and are not Phase 3A test outcomes.
+
+### Executed implementation checks
+
+| Command               | Actual result                                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| npm run typecheck     | Passed                                                                                                                             |
+| npm run lint          | Passed                                                                                                                             |
+| npm run test:coverage | **144 tests in 7 files passed**; final recorded run 5.68s                                                                          |
+| Scoped V8 coverage    | **98.03% statements (450/459), 95.27% branches (363/381), 100% functions (114/114), 98.55% lines (409/415)**; thresholds unchanged |
+| npm run test:e2e      | **15 Chromium scenarios passed**, final recorded run 22.2s; local fixture server on 4101                                           |
+| npm run build         | Passed; 2073 modules; JS **283.89 kB** (gzip **88.59**), CSS **30.24 kB** (gzip **7.62**), HTML **0.62 kB** on the recorded run    |
+
+Coverage includes pure domain/feature/repository/service/hook .ts files and reusable common components; most App/form/settings JSX is excluded from the percentage and covered through component/browser interactions. Test durations and bundle sizes describe this environment/run, not user performance, live Gmail sync time, classification accuracy or onboarding conversion. Existing 94 Phase 2 tests remain in the passing 144-test suite; nine original Chromium scenarios remain in the 15-scenario suite.
+
+### Behavior and rendered evidence
+
+Unit/component checks cover every role/goal mapping, goal-over-role precedence, canonical order/deduplication, category-subset validation, optional/blank/all-off choices, supported/unsupported schemas, malformed JSON, extra sensitive fields, immutable complete message sets, safe storage reads/writes/deletes, scoped reset and unchanged declarations preserving draft toggles. Applied preferences and unsaved draft are separate; skipping an edit retains previous saved values.
+
+Chromium checks exercise first run, native radio arrow keys, checkbox Space, Tab/Enter, heading focus after step changes, review/save/reload, returning-user summary, skipped setup, all categories remaining accessible, invalid/blocked storage, unrelated-key preservation and unchanged mocked Gmail request/live-state counts through save/reset. Synthetic Gmail disconnect still clears retained live results. The extracted Google helper intercepts all HTTPS, fulfills synthetic SDK/API responses and blocks anything else. No automatic real OAuth, mailbox read, revoke or credential operation occurred.
+
+Inspected local screenshots **output/playwright/phase3a-review-1440.png** and **phase3a-review-390.png**. The inline review uses existing tokens, clear optional/presentation-only copy, native toggles and responsive columns; all dashboard/Gmail controls remain present. Browser tests assert no horizontal overflow at these viewports and reduced-motion mode. Artifacts are ignored and contain only synthetic data. No screen-reader, non-Chromium, zoom or formal WCAG certification is claimed.
+
+### Security, limits and review status
+
+The sole new persistent application surface is the strict five-field preference allowlist. Tokens, email, Gmail identifiers and diagnostics remain memory-only. Preferences cannot change OAuth scopes, classifier output, labels, retrieval depth or indexing coverage. Defaults/skipped/all-off retain original order; active focus only orders existing priority bands/category/date. Same-origin XSS, shared-device/profile backup access, synchronous storage and browser eviction remain risks. No cross-tab updates, cross-device portability, encrypted settings, custom categories, inferred profiles or onboarding telemetry exists.
+
+No new dependency/audit was run; Phase 2's recorded development-tool findings remain unresolved and are not presented as a fresh security result. Production Gmail/auth/mailbox/classifier implementations remain unchanged. No new commit, push, deployment, Google Cloud change, host installation, paid resource or real-account test was performed. **Owner code review is required before any commit**, per the Phase 3A instruction. Full changed-file inventory and proposed 3B scope: PHASE3A_CHANGE_REPORT.md.
+
+### Final Phase 3A repository checks
+
+- npm run format:check: passed; all matched files follow Prettier style.
+- git diff --check: passed.
+- Relative Markdown links: **45 documents checked, zero broken targets**.
+- All **39 added/modified non-ignored files** are inventoried in PHASE3A_CHANGE_REPORT.md. A limited scan of those file contents for Google access-token/API-key/client-secret, private-key and GitHub-token literal patterns found zero matches. No environment files, build artifacts or dependencies were read by this scan. Pattern matching is not an exhaustive personal-information/security audit.
+- git check-ignore confirms .env.local and synthetic browser screenshots remain ignored. No local credential/environment file was displayed, edited or staged. Production source scan found browser storage access only in PreferenceStore; no console logger, sessionStorage/IndexedDB call or raw HTML insertion was found.
+- git diff confirms Gmail services/adapter, useMailbox, classifier, package/lockfile, Vite configuration and .env.example are unchanged. Scoped coverage includes the new preference store/hook/pure selectors. HEAD remains 4a06d27 on feat/personalized-onboarding; no staging, identity change or commit was performed.
