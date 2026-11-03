@@ -1,6 +1,6 @@
 # Documentation index
 
-Every document below describes this project. Implemented and planned behavior are distinguished throughout. Verification is local; no cloud deployment or account integration occurred.
+Every document below describes this project. Implemented and planned behavior are distinguished throughout. Verification is local; no cloud deployment occurred. Phase 2 account-integration code is mock-verified; real-account access remains untested.
 
 ## Root and bootstrap
 
@@ -77,3 +77,15 @@ Every document below describes this project. Implemented and planned behavior ar
 ## Configuration and evidence files
 
 `.gitignore` excludes secrets, dependencies, outputs, local database/token patterns and browser binaries. `.env.example` has only public mock placeholders. `.nvmrc`, package.json and package-lock.json specify the toolchain and resolved dependencies. tsconfig, Vite/ESLint/Prettier/Playwright configs define local checks; `.github/workflows/ci.yml` runs them without deployment. Local screenshots, browser traces and design-evidence.json are under ignored `output/playwright/`; coverage is under ignored `coverage/`.
+
+## Phase 2 additions
+
+| Document                                                  | Purpose                                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [Phase 2 concepts](learning/PHASE2_CONCEPTS.md)           | Code-grounded OAuth/browser/REST/validation/pagination/error-handling lessons.       |
+| [Manual account test plan](quality/PHASE2_MANUAL_TEST.md) | Concrete count-only live test requiring explicit owner approval after mocked checks. |
+| [Phase 2 change report](quality/PHASE2_CHANGE_REPORT.md)  | Complete changed-file inventory, test evidence and remaining limitations.            |
+
+[ADR 0004](architecture/ADR/0004-browser-oauth-metadata-sample.md) records the chosen explicit token flow, bounded metadata policy, alternatives and consequences.
+
+[Live measurements](quality/LIVE_MEASUREMENTS.md) separates owner-reported actual-account observations from mocked tests and theoretical request arithmetic; pending values are explicitly unmeasured.

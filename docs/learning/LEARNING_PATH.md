@@ -29,3 +29,7 @@ For each milestone explain the problem, concept, selected approach, alternatives
 ## Mastery checks
 
 Can you explain the current code without reading every line? Can you predict how malformed input or an unknown sender behaves? Can you design a crash-safe checkpoint without duplicating work? Can you distinguish permissions, authorization and transport security? Can you show actual evidence for every published metric? These are stronger learning outcomes than the number of libraries installed.
+
+## Phase 2 implementation exercises
+
+[Phase 2 concepts](PHASE2_CONCEPTS.md) connects OAuth/public clients, memory tokens, browser activation, REST adapters, runtime validation, pagination, bounded retries and source-switch cancellation to the current code. The mocked exercises are now implemented; real consent acceptance remains a separate approved manual test. Run the current test suite rather than assuming the historical Phase 1 count is the current total.

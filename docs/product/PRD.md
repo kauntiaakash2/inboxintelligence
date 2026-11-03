@@ -1,6 +1,6 @@
 # Product requirements — Inbox Intelligence
 
-Status: Phase 1 synthetic prototype. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
+Status: Phase 2 browser authorization/metadata sample implemented and mock-verified; real-account verification pending. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
 
 ## 1. Problem statement
 
@@ -88,3 +88,7 @@ Which messages are truly important to this owner? Required Spam/Trash coverage? 
 ## 20. Roadmap
 
 Phases 0–1 foundation; 2 authorized latest 100; 3 historical import; 4 incremental cache; 5 adaptive patterns; 6 corrections; 7 real measurement; 8 personal deployment; 9 small alpha; 10 SaaS feasibility. ROADMAP.md provides dependencies, exits and evidence gates.
+
+## Phase 2 implementation addendum — 2026-11-02
+
+FR11 (explicit read-only authorization) and a bounded part of FR12 (up to 100 listed IDs) are implemented with mocked verification. Default mock exploration remains available. Live UI exposes source, progress, selected/loaded/failed counts, excluded Spam/Trash and partial mailbox coverage. No durable full index, bodies, attachments, mailbox writes, silent authorization, correction learning or product accuracy result is included. A real account test and full sync remain separate exit gates; this does not turn the prototype into a personal-production MVP.

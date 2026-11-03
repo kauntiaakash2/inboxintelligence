@@ -2,11 +2,11 @@
 
 ## Mission and current state
 
-Build explainable, privacy-conscious email intelligence: Understand → Classify → Prioritize → Optimize → Measure. Phase 1 uses 96 synthetic messages; no Gmail integration, persistence, AI model, or backend exists. Never describe planned work as implemented. Inspect relevant files and Git status before modifying anything; preserve existing changes.
+Build explainable, privacy-conscious email intelligence: Understand → Classify → Prioritize → Optimize → Measure. Phase 2 defaults to 96 synthetic messages and implements explicit GIS authorization plus up to 100 Gmail metadata records. No persistence, AI model or backend exists. Real account verification is separate and requires explicit owner approval; automated Google services must remain mocked. Never describe planned work as implemented. Inspect relevant files and Git status before modifying anything; preserve existing changes.
 
 ## Architecture
 
-`domain/models.ts` is the application contract. `MockEmailRepository` validates and copies the fixture; `loadInbox` runs deterministic classification and session instrumentation; pure selectors and aggregators feed React. UI has Overview, Inbox explorer, Analytics, and Settings. Browser session memory is the only storage. Gmail response mapping belongs in a future adapter, never components.
+`domain/models.ts` is the application contract. `MockEmailRepository` validates and copies the fixture; `loadInbox` runs deterministic classification and session instrumentation; pure selectors and aggregators feed React. UI has Overview, Inbox explorer, Analytics, and Settings. Browser session memory is the only storage. GmailEmailRepository maps METADATA responses through gmailMetadata and shared domain validation; no snippets, bodies, attachments or write operations. GmailAuthorization holds private in-memory tokens; useMailbox isolates sources/sessions and aborts obsolete work. Never put raw Gmail responses or tokens into components.
 
 ## Coding standards
 

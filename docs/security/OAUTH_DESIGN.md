@@ -1,31 +1,42 @@
-# Google authorization design — not implemented
+# Google authorization — Phase 2 implementation
 
-Reviewed against official Google documentation during bootstrap; revalidate before Phase 2. No real credentials are requested or configured.
+Status: implemented and verified with mocked SDK/API services. Real Google consent/mailbox test awaits explicit owner approval. No Google project setting, secret, verification status or external account was modified. Reviewed 2026-11-02 against official sources below.
 
-## Fundamentals and public-client constraints
+## Public client and least privilege
 
-OAuth 2.0 delegates access to a resource API without sharing the user's password. Gmail authorization is distinct from signing into a future Inbox Intelligence account. A static browser application is a public client: client IDs are public, client secrets cannot be protected in a Vite bundle. Never put a client secret or long-lived refresh credential in VITE_ variables or browser storage.
+OAuth delegates Gmail API permission without giving this application a password. The browser is a public client: its code/config can be inspected, so `VITE_GOOGLE_CLIENT_ID` is public and a client secret cannot be protected here. Only `https://www.googleapis.com/auth/gmail.readonly` is requested. Token configuration sets `include_granted_scopes: false`, so prior broader grants are not intentionally combined; no identity/profile/write scope is requested. Read-only still grants broad mailbox authority even though the adapter retrieves a narrow metadata sample. The scope is restricted under Google's policy; verification/assessment and any exception must be reviewed before publication. None is claimed complete.
 
-## Planned browser token model
+## Explicit two-step lifecycle
 
-Use Google Identity Services `google.accounts.oauth2.initTokenClient` for user-triggered authorization, then `requestAccessToken` from an explicit connection/reconnect action. Google's GIS token model returns a short-lived access token to a callback for direct REST/CORS calls. The SDK's documented token flow should not be confused with a hand-built authorization-code exchange in the browser. Inspect granted scopes before requests. Hold token and expiry in memory only; use Authorization headers only with allowlisted Google endpoints. Never append credentials to logs, query strings, error objects or redirect URLs.
+1. Default page loads synthetic data without contacting GIS or requesting consent.
+2. Connect Gmail loads only `https://accounts.google.com/gsi/client`, with a 15-second timeout and safe retry. Mock data remains usable.
+3. Authorize Gmail synchronously invokes initTokenClient/requestAccessToken from a fresh click. This avoids losing the browser's transient user activation while awaiting the script.
+4. Callback validates response shape, token type/lifetime and granted scope, using both response scopes and hasGrantedAllScopes. Denial, popup cancellation/blocking, missing scope and malformed SDK responses stay in mock mode without Gmail calls. Error details are not copied to UI/logs.
+5. Accepted access token lives in a JavaScript private field, never React state, snapshots, URLs, storage, logs or metric events. Only the Google API adapter obtains it at request time.
+6. Expiry uses the response lifetime with a five-second safety margin, both a timer and a clock check before requests. Browser suspension can delay timers, so timer-only protection is insufficient.
+7. 401 invalidates authorization and returns to mock. 403 reports refusal without an automatic retry loop. No refresh token, silent reconnect or background authorization is implemented.
+8. Disconnect clears local authorization, cancels pending work, removes live records/metrics from current state and requests GIS revoke. Revocation confirmation has a 10-second deadline; reconnect is disabled during that wait so a delayed revoke cannot invalidate a fresh grant. Failure does not restore local access; the UI points to Google Account permissions.
 
-## Scope selection and verification
+## Races and revocation limitations
 
-The proposed `https://www.googleapis.com/auth/gmail.readonly` allows read-only mailbox access and is classified by Google as **restricted**. Do not request gmail.modify, mail.google.com or send/delete scope. gmail.metadata has narrower access but does not support all desired future search/body behaviors; revisit whether it is sufficient before final consent design. Minimizing fetched fields does not narrow the authority of a broader scope.
+Attempt counters reject callbacks from canceled/obsolete flows; duplicate callbacks cannot replace an accepted token or convert a connected session into a late popup error. Cancel cannot programmatically close Google's own chooser. If consent finishes after cancellation, that remote grant may still exist; the stale token is ignored and users may need to remove access in their Google Account. Disconnect with no available valid token cannot prove remote revocation. Google revoke can revoke all app-granted scopes, not merely disconnect one view. External revocation is noticed on an API 401 or local expiry, not instantaneously.
 
-Configure the Google project, authorized JavaScript origins, consent branding, user support and test users only after owner approval. Testing/public/internal status and eligible verification exceptions depend on actual account and publication context. Restricted-scope verification and security assessment considerations can materially affect SaaS economics, especially when restricted data is transferred/stored on servers. No verification or exemption is claimed. Check Google Workspace API user-data policies before release.
+Page reload clears application memory but not Google consent. JavaScript strings cannot be cryptographically zeroed, and same-origin XSS, malicious extensions/dependencies or developer tooling can access live memory. Private fields reduce accidental exposure, not this threat. No screenshots/traces/logs of real mail or tokens belong in Git or an AI conversation.
 
-## Lifecycle and errors
+## Origins and local configuration
 
-Connect → explain read-only access and local retention → user opens GIS chooser/consent → callback validates grant → retrieve bounded metadata → show partial scope/coverage → expire or disconnect. Denied consent or popup failure returns to a safe disconnected state. A running job handles 401 by stopping safely and asking the user to reauthorize; it does not retry forever or silently persist tokens. Tokens have finite expiry from the response; renew through the user-driven GIS flow. On disconnect cancel account work and clear references; offer explicit revocation using GIS revoke with a valid token or direct users to verified Google account controls. Explain that clearing app memory alone does not revoke consent.
+Use the exact owner-registered JavaScript origin on port 5173. `http://localhost:5173` and `http://127.0.0.1:5173` differ; this task does not modify either registration. Public client ID is read from ignored .env.local, never reproduced in documents. Restart Vite after changing it. Missing configuration displays a safe setup error. Local application remains a static browser client; no redirect code exchange or browser refresh-token storage is added.
 
-## Future hosted backend differences
+## Tests and future boundary
 
-Server authorization-code flow with protected refresh-token custody could support offline work, but requires secure redirect/state binding, backend session controls, encryption/key management, CSRF protections, tenant isolation, audit, retention/deletion and greater operational cost. Choose the documented Google server flow, not ad hoc browser refresh-token storage. This is a separate ADR and approval boundary.
+Automated tests inject fake GoogleOAuth services, synthetic grants/errors and intercepted HTTPS responses. They cover success, missing scope, denied consent, popup cancellation, SDK exceptions, expiry, stale callbacks, disconnect and unconfirmed revocation. They never target a real account. The manual approval plan is ../quality/PHASE2_MANUAL_TEST.md.
 
-## Phase 2 tests
+A hosted backend for offline access requires a separate authorization-code-flow design, protected refresh-token custody, secure session/cookie/CSRF controls, tenant authorization, retention and revised cost/privacy review. Browser-first implementation does not establish SaaS security or Google verification.
 
-Mock denied and partial scopes, popup failure, wrong origin, expired/revoked token, 401/403/429, cancellation and account switch. Verify browser storage and logs contain no credentials. A real consent smoke test requires explicit owner approval and must record sanitized status/counts only.
+Official references: [GIS token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model), [JavaScript API](https://developers.google.com/identity/oauth2/web/reference/js-reference), [error handling](https://developers.google.com/identity/oauth2/web/guides/error), [Gmail scopes](https://developers.google.com/workspace/gmail/api/auth/scopes), [message listing and newest-first order](https://developers.google.com/workspace/gmail/api/guides/list-messages), [messages.get](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get). Python credential-file examples in Gmail docs are not the GIS browser flow and must not be copied into this app.
 
-Official sources: [GIS token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model), [authorization behavior](https://developers.google.com/identity/oauth2/web/guides/how-user-authz-works), [Gmail scopes](https://developers.google.com/workspace/gmail/api/auth/scopes), [OAuth production readiness](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance), [Google Workspace user data policy](https://developers.google.com/workspace/workspace-api-user-data-developer-policy). Browser scope/consent configuration must be checked again against then-current official requirements.
+## 2026-11-03 release review
+
+The owner confirmed http://127.0.0.1:5173 as the registered origin. Local HTTP checks confirm the actual app and that its public client configuration matches the local file without displaying the value. Google Console was not independently inspected. The owner reported two live diagnostic runs, including a confirmed 100/100, zero-failure sample; approval/coverage/revocation/reconnection evidence is tracked explicitly in ../quality/LIVE_MEASUREMENTS.md. Automated negative cases remain mocked.
+
+The owner-run lifecycle check confirmed a first revoke callback and successful reconnection. A final revoke callback was not observed; the owner subsequently reported this app absent from Google Account connections. Local mock/disconnected state alone was never treated as proof of remote revocation. No token introspection, private browser dump or unsupported SDK/provider diagnosis was used to fill that evidence gap.

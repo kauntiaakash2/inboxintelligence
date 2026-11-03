@@ -16,6 +16,7 @@ export type Priority = 'High' | 'Medium' | 'Low'
 export interface EmailSender {
   id: string
   name: string
+  /** Empty when the provider sender address is unavailable or cannot be parsed. */
   address: string
 }
 export interface EmailMessage {

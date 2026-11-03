@@ -36,9 +36,7 @@ describe('important UI workflows', () => {
       screen.getByRole('heading', { name: 'Inbox rhythm' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Settings' }))
-    expect(
-      screen.getByRole('button', { name: 'Coming in Phase 2' }),
-    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Connect Gmail' })).toBeEnabled()
     expect(screen.getByText('Gmail connection')).toBeInTheDocument()
   })
   it('exposes recoverable errors and handles an empty repository', async () => {

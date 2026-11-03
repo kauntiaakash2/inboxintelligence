@@ -1,4 +1,8 @@
-# Phase 1 verification — 2026-10-31
+# Verification record
+
+Current: Phase 2 release checks refreshed on 2026-11-03. The owner supplied aggregate live timing/request measurements; the latest report confirms 100/100 metadata records and zero failures; account lifecycle confirmations remain tracked separately in LIVE_MEASUREMENTS.md. Historical mocked verification is retained below. Historical Phase 1 evidence is retained below.
+
+## Phase 1 verification — 2026-10-31
 
 ## Actual results
 
@@ -56,3 +60,79 @@ AC1–AC14 passed in the described local scope. Documentation/content/link scan 
 - CI uses current official checkout/setup-node v7 examples with contents:read and credential persistence disabled. The workflow has not been executed on GitHub.
 
 The Phase 1 foundation is ready for the separately authorized Gmail integration milestone. Remaining development dependency advisories and the scope of accessibility/browser testing remain explicit limits.
+
+## Phase 2 — 2026-11-02: executed mocked verification
+
+Starting branch: feat/gmail-oauth, clean working tree. Existing source and product/architecture/OAuth/security/Phase 1 records were inspected before changes. Official GIS token-model/JavaScript/error documentation and Gmail list/get guides were consulted. Google's current list guide explicitly states newest-first order; adapter also sorts hydrated metadata by internalDate. No account settings were modified.
+
+| Check                                   | Actual result                                                                                                                                                                                                                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm run format and npm run format:check | Passed; final source/config/docs formatted.                                                                                                                                                                                                                                                          |
+| npm run typecheck                       | Passed, exit 0.                                                                                                                                                                                                                                                                                      |
+| npm run lint                            | Passed, exit 0.                                                                                                                                                                                                                                                                                      |
+| npm run test:coverage                   | Passed: **93 tests in 5 files**, including the original 36 behavior tests (the obsolete disabled-placeholder assertion was updated for the working connection control).                                                                                                                              |
+| Scoped V8 coverage                      | **97.53% statements, 94.82% branches, 100% functions, 98.19% lines**. Includes domain validation, pure feature logic, repositories/services, useMailbox and reusable StatusPanel; most App/message/settings JSX is excluded and covered by interaction/browser checks instead. Thresholds unchanged. |
+| npm run build                           | Passed: Vite production build; JS 269.39 kB (gzip 84.60), CSS 26.86 kB (gzip 6.89), HTML 0.62 kB on the recorded run. This is bundle size, not a product speed/savings result.                                                                                                                       |
+| npm run test:e2e                        | Passed: **9 Chromium scenarios**, recorded final run 15.1s. Local Vite started on port 4101 through Playwright.                                                                                                                                                                                      |
+| git diff --check                        | Passed; no whitespace errors.                                                                                                                                                                                                                                                                        |
+| Local configuration protection          | git check-ignore confirms .env.local ignored; git ls-files .env.local returned no tracked file. Its contents were not displayed, inspected, changed or staged; Vite loads the local public configuration as intended.                                                                                |
+| Production source scan                  | No localStorage/sessionStorage/IndexedDB calls, console logging, dangerouslySetInnerHTML, client secret, gapi or Gmail write-scope references in production src. This is a limited static review, not an exhaustive security proof.                                                                  |
+
+### Tested behavior and network isolation
+
+Fake SDK cases: success, denied consent, popup cancellation, missing required scope, invalid/expired grant, SDK scope-check exception, duplicate/stale callbacks, canceled script preparation, expiry timer plus clock check, missing configuration, script network/timeout errors, revoke success/failure/deadline and reconnect blocked during pending revoke. Tests assert status snapshots contain no token and persistent storage remains empty.
+
+Fake API cases: unique newest-100 cap, pagination/deduplication/repeated-token protection, METADATA/header-only fixed-origin GETs without request bodies, no credentials/cache/redirects, 401/403/429/5xx, Retry-After, network/malformed JSON, malformed metadata, missing optional fields, empty mailbox, per-record partial failure, cancellation and source-aware instrumentation. No full-body or attachment retrieval code was added.
+
+Component/browser cases: original mock search/filter/explanation behavior, Connect→Authorize, source disclosure, partial coverage, empty/partial sample, disconnect and revoked-token mock fallback, ignored late discovery and no silent reconnect after reload. Browser Gmail fixtures intercept **all HTTPS requests**: fulfill only synthetic GIS/Gmail data and block anything else. Browser tests do not reach a real mailbox or perform actual revocation. No real Google credential is used by test fixtures; Playwright's launched server supplies a test public client ID.
+
+### Rendered evidence
+
+Inspected synthetic-interception screenshots at 1440×1000 and 390×844: output/playwright/phase2-live-1440.png, phase2-live-390.png, phase2-detail-1440.png. They show clear live-source/sample labels, 2 loaded of 3 selected with one deliberately malformed record, excluded Spam/Trash, metadata-only detail and no horizontal overflow. phase2-detail-390.png also captured. These are **fake metadata**, not evidence of a live account connection. Existing Phase 1 screenshots were regenerated by the passing suite. No formal WCAG/screen-reader or non-Chromium certification is claimed.
+
+### Acceptance and remaining evidence
+
+Implemented/mock-verified: explicit read-only GIS flow, no silent reconnect, memory-only authorization, up-to-100 metadata retrieval, source/partial/progress/error controls, mock mode, cancellation/disconnect, safe errors, no mailbox writes, and required local checks. Real OAuth client origin/consent/test-user configuration, actual Google grant/revocation and real newest-message display are **not verified**. The bounded manual test in PHASE2_MANUAL_TEST.md is ready for owner approval; it must not capture tokens, senders, subjects, IDs, screenshots or traces from real mail.
+
+No dependency was added and package-lock.json is unchanged. Previous Phase 1 development-tool advisories remain historical known risk; no new audit outcome is fabricated. No deployment, push, paid resource, Google Cloud setting change, real mailbox read, or real product accuracy/savings metric occurred. Changes remain on feat/gmail-oauth for review; no new commit was created during this milestone. Full file inventory: PHASE2_CHANGE_REPORT.md.
+
+### Final repository review
+
+Local Markdown links resolved across 41 documents. PHASE2_CHANGE_REPORT.md covers all 51 added/modified files. A limited scan of changed source/config/docs found no Google API-key/access-token/private-key literals; synthetic grants in tests are deliberate fixtures. The ignored local environment file and generated bundle were excluded from that scan. Final format checking and git diff --check passed. No real account was contacted. The review server was then started in default mock mode at http://127.0.0.1:4101/ (Vite ready in 224 ms on this run); Google authorization remains user-triggered.
+
+## 2026-11-03 — Aggregate live-test and release review
+
+### Observed versus reported evidence
+
+The assistant browser connector was unavailable. The owner confirmed the registered origin as http://127.0.0.1:5173. A local HTTP check independently confirmed the Vite application responds there and serves the same public client ID as local configuration, without displaying the ID or file contents. Google Console configuration was not independently inspected or changed.
+
+The owner then reported **17,609 ms (17.609 seconds)**, **101 client API fetch attempts**, **1 list attempt**, **100 metadata attempts**, **0 retries** from the live diagnostics panel. These are owner-reported actual-account measurements, not fixture/test timings or theoretical arithmetic. The owner subsequently supplied a separate report: **100 selected, 100 loaded, zero failed**, more messages beyond the sample, **17,061 ms**, **101 / 1 / 100 API/list/metadata attempts**, **zero retries**. The earlier 17,609-ms report remains separate; its coverage was not supplied. The owner then confirmed that Disconnect reported Google revocation confirmed and restored the 96-message mock dashboard. The owner later explicitly confirmed reconnection succeeded, followed by a generic locally disconnected/mock status rather than a final remote revocation confirmation. The owner then checked Google Account connections and reported this app was not listed. This supplies owner-reported account-side grant-absence evidence; final SDK callback confirmation remains unobserved and no SDK/provider cause is inferred. Live retained React state was not independently inspected; the retained-result count is verified as zero by automated state-level checks. Detailed acceptance status and definitions: LIVE_MEASUREMENTS.md and PHASE2_MANUAL_TEST.md.
+
+### Executed local checks
+
+- npm run typecheck: passed.
+- npm run lint: passed.
+- npm run test:coverage: **94 tests in 5 files passed**. Scoped coverage: **97.59% statements, 94.49% branches, 100% functions, 98.23% lines**; excludes most application JSX rendering as previously documented.
+- npm run test:e2e: **9 intercepted Chromium scenarios passed**, including desktop/mobile aggregate diagnostics, denial, missing scope, canceled consent, 401 fallback, disconnect state count zero and no silent reconnect. The reported suite duration (15.5s on this run) is a test-run statistic, not live sync performance.
+- npm run build: passed; JS 271.37 kB (gzip 85.13), CSS 27.15 kB (gzip 6.97), HTML 0.62 kB on the recorded run.
+- npm run format:check and git diff --check: passed.
+- npm audit --json: refreshed, exit 1; **12 moderate development-tool findings** rooted in minimatch GHSA-g3hv-75wg-m249; no high/critical findings. No forced downgrade/major override applied.
+- npm audit --omit=dev --json: refreshed, exit 0; **0 known runtime dependency vulnerabilities**. Audit is not proof of security.
+
+The new regression case verifies a failed metadata record is recovered on explicit refresh, with the displayed selection moving from one success/one failure to two successes/no failures. API retry tests count actual fetch attempts and verify no request counter increments for unusable authorization. Post-disconnect tests inspect the aggregate count derived from retained mailbox-result state, not just hidden rows. Real denied consent/expiry/failure injection was not forced against the owner's mailbox; those remain isolated mocked tests.
+
+### Privacy and Git review
+
+Candidate tracked/untracked non-ignored files were scanned locally for Google access-token/API-key/client-secret, private-key and GitHub-token patterns, non-fixture email-address patterns and exact local-configuration value matches. No findings; scanned content/values were not printed. Historical review scanned **72 file blobs** with no credential/configuration matches. All 89 candidate files at that scan excluded .env.local, generated bundles, dependencies, browser artifacts/cache and coverage. Later staged checks repeat the review before committing. This is a limited pattern/content review, not a proof that all possible personal information is absent. Standard configured Git author metadata is intentionally preserved.
+
+Production source has no content console logger, browser storage calls or raw HTML insertion. The only Gmail scope requested is gmail.readonly with prior-scope inclusion disabled and granted-scope validation. The fixed-origin transport invokes only GET on list/METADATA endpoints; no body/attachment or mailbox-write path exists. SDK grant revocation is a separate authorization action. Browser/Google logs cannot be independently audited through the unavailable connector; no real network dumps, screenshots or traces were captured by the assistant.
+
+### Remaining gates
+
+Live coverage, first disconnect/revocation and explicit reconnect were owner-confirmed. Final local disconnected state was reported; the owner subsequently reported the app absent from Google Account connections. Only received observations are recorded as completed. Local verified implementation may be checkpointed with these remaining manual acceptance items explicitly open; no full-release/live-lifecycle completion is claimed in advance. No deployment, push, paid resource or Google Cloud/credential change is authorized or performed.
+
+### Local Phase 2 checkpoint evidence
+
+This verification record accompanies the requested Phase 2 implementation checkpoint on feat/gmail-oauth. All 53 changed files were individually inventoried and staged only after branch/link/artifact checks. The exact commit is identified by Git history (`feat(gmail): add read-only OAuth, metadata integration and diagnostics`); the resulting hash is reported in the delivery response. No push or deployment is performed.
+
+Final live result provenance: owner-reported 100/100 load with zero failures, latest 17,061 ms, 101 client fetch attempts (one list plus 100 metadata), zero retries. Earlier 17,609-ms run remains separate. First disconnect explicitly confirmed Google revocation; reconnection succeeded; final local disconnect was reported. Final in-app SDK revocation confirmation was not observed, and the owner confirmed this app was not listed in Google Account connections. No claim of an independent account inspection or a diagnosed provider failure is made.

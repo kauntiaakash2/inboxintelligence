@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { host: '127.0.0.1' },
+  server: { host: '127.0.0.1', port: 5173, strictPort: true },
   test: {
     include: ['src/tests/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
@@ -13,6 +13,8 @@ export default defineConfig({
       provider: 'v8',
       include: [
         'src/features/**/*.ts',
+        'src/domain/**/*.ts',
+        'src/hooks/**/*.ts',
         'src/services/**/*.ts',
         'src/repositories/**/*.ts',
         'src/components/**/*.tsx',

@@ -4,6 +4,23 @@ The format follows Keep a Changelog conventions; versions follow semantic versio
 
 ## [Unreleased]
 
+### Added
+
+- Session-only client duration/API-attempt/retry diagnostics, retained-live-state checks and partial-failure refresh recovery tests.
+- Separate owner-reported live measurement record; account acceptance outcomes remain explicitly pending where unconfirmed.
+
+- Explicit GIS read-only authorization with in-memory tokens, expiry, cancellation and disconnect/revocation.
+- Paginated newest-100 Gmail metadata adapter with runtime validation, bounded concurrency/retries and partial coverage.
+- Source-aware dashboard, progress/errors and mocked OAuth/API/component/browser verification.
+- Phase 2 security/architecture/learning records and an owner-approved manual-test plan; live account test not executed.
+
+### Changed
+
+- Development defaults fixed to 127.0.0.1:5173 with strictPort; intercepted browser tests retain their explicit 4101 override.
+
+- Shared runtime validator moved to domain; missing sender addresses can be represented as unavailable.
+- Real-source instrumentation records metadata classifications without simulated body requests; mock behavior preserved.
+
 ## [0.1.0] - 2026-10-31
 
 ### Added

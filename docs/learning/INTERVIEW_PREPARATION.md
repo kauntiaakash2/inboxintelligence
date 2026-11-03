@@ -18,6 +18,19 @@
 
 9. **How would resumable Gmail sync avoid duplicates or missing changes?** Use account+message ID unique keys, transactional page upserts/checkpoints and idempotent replay. Capture a history baseline before enumeration, replay changes afterward and reconcile periodically. Expired history 404 triggers full rescan. This is a documented future design, not implemented Phase 1 behavior.
 
-10. **Why browser-first, and where would tokens live?** Static hosting and local processing suit one personal account and a low operating budget. The browser cannot hide a client secret or guarantee closed-app work. Planned GIS access tokens stay only in memory, with explicit consent/reconnect; IndexedDB would hold minimized metadata and checkpoints, never long-lived browser credentials. SaaS/offline access requires a separate backend security design.
+10. **Why browser-first, and where would tokens live?** Static hosting and local processing suit one personal account and a low operating budget. The browser cannot hide a client secret or guarantee closed-app work. Implemented GIS access tokens stay only in memory, with explicit consent/reconnect; IndexedDB would hold minimized metadata and checkpoints, never long-lived browser credentials. SaaS/offline access requires a separate backend security design.
 
-Practice each answer with the actual relevant function or ADR. Do not claim production users, accuracy, Google integration or paid infrastructure experience from this synthetic milestone.
+Practice each answer with the actual relevant function or ADR. Do not claim production users, accuracy, real-account Google acceptance or paid infrastructure experience from mocked milestones.
+
+## Phase 2 questions grounded in the current implementation
+
+11. **Why two buttons for Connect and Authorize?** Loading GIS is asynchronous and can consume the browser's transient user activation. The second explicit click calls requestAccessToken synchronously, avoiding silent authorization or popup dependence on an earlier gesture.
+12. **Why is a frontend environment variable not a secret?** Vite compiles VITE_ values into downloadable code. The OAuth client ID identifies a public client; an embedded client secret would not remain confidential.
+13. **How are granted scopes checked?** The callback first validates shape/scope, then uses hasGrantedAllScopes for gmail.readonly, with include_granted_scopes=false in the request. Missing permission causes no Gmail request.
+14. **What if the browser sleeps through token expiry?** The service uses a timer and checks the expiry clock before every token use. A Gmail 401 also clears authorization; no hidden reconnect is attempted.
+15. **How is the sample bounded?** Follow nextPageToken until 100 unique IDs or the list ends, request only METADATA, use four workers, and sort by internalDate. Always disclose excluded Spam/Trash and skipped failures.
+16. **Why validate provider JSON?** Gmail carries sender-controlled headers, and TypeScript is erased at runtime. IDs, date strings, header shapes and labels must be validated before producing domain records.
+17. **How do you handle 429 versus 403?** Retry 429/5xx at most three times with backoff/jitter and Retry-After. This version conservatively stops on 403 rather than parsing private error payloads or assuming every refusal is retryable.
+18. **How do you prevent stale mailbox data after disconnect?** Abort the load, invalidate its source/session key and clear retained result state. Detail selection stores an ID/key, so it cannot retain a separate private message object. Late callbacks/results are ignored.
+19. **Why block reconnect during revocation?** A delayed revoke can invalidate a newly issued token for the same app grant. Clear local state immediately and wait at most ten seconds for revocation before permitting a fresh flow.
+20. **What did the tests actually prove?** They verified the implemented lifecycle, request shapes and UI with fake services, including negative cases. They did not prove real consent configuration, account eligibility, live Gmail behavior, accuracy or API savings.

@@ -23,8 +23,11 @@ import {
   type Priority,
 } from '../domain/models'
 import { MockEmailRepository } from '../repositories/mockEmailRepository'
-import { MemoryInstrumentation, calculateMetrics } from '../services/metrics'
-import { loadInbox } from '../services/loadInbox'
+import { calculateMetrics } from '../services/metrics'
+import { GmailAuthorization } from '../services/gmailAuthorization'
+import { GmailConnection } from '../features/settings/GmailConnection'
+import { GmailDiagnostics } from '../features/settings/GmailDiagnostics'
+import { useMailbox } from '../hooks/useMailbox'
 import { selectMessages } from '../features/inbox/selectMessages'
 import { summarize } from '../features/analytics/summarize'
 import { MessageList } from '../features/inbox/MessageList'
@@ -40,40 +43,47 @@ const navigation = [
 ] as const
 export function App({
   emailRepository = repository,
+  authorization: suppliedAuthorization,
 }: {
   emailRepository?: EmailRepository
+  authorization?: GmailAuthorization
 }) {
   const [view, setView] = useState<View>('Overview')
-  const [messages, setMessages] = useState<ClassifiedMessage[]>([])
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [revision, setRevision] = useState(0)
+  const [authorization] = useState(
+    () =>
+      suppliedAuthorization ??
+      new GmailAuthorization({
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '',
+      }),
+  )
+  const mailbox = useMailbox(emailRepository, authorization)
+  const { messages, status, isLive, refresh } = mailbox
+  const sourceLabel = isLive ? 'Live Gmail sample' : 'Mock data'
+  const rangeLabel = messages.length
+    ? `${messages.at(-1)!.receivedAt.slice(0, 10)} – ${messages[0]!.receivedAt.slice(0, 10)}`
+    : 'No messages loaded'
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<EmailCategory | 'All'>('All')
   const [priority, setPriority] = useState<Priority | 'All'>('All')
-  const [selected, setSelected] = useState<ClassifiedMessage | null>(null)
-  const [events, setEvents] = useState<
-    ReturnType<MemoryInstrumentation['snapshot']>
-  >([])
-  useEffect(() => {
-    let cancelled = false
-    const instrumentation = new MemoryInstrumentation()
-    void loadInbox(emailRepository, instrumentation, `demo-${revision}`)
-      .then((result) => {
-        if (!cancelled) {
-          setMessages(result)
-          setEvents(instrumentation.snapshot())
-          setStatus('ready')
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [emailRepository, revision])
+  const [selection, setSelection] = useState<{
+    id: string
+    key: string
+  } | null>(null)
+  useEffect(
+    () => authorization.subscribe(() => setSelection(null)),
+    [authorization],
+  )
+  const selected =
+    selection?.key === mailbox.key
+      ? (messages.find((message) => message.id === selection.id) ?? null)
+      : null
+  const setSelected = (message: ClassifiedMessage) =>
+    setSelection({ id: message.id, key: mailbox.key })
   const stats = summarize(messages)
-  const metrics = calculateMetrics(events)
+  const metrics = calculateMetrics(
+    mailbox.events,
+    isLive ? 'real' : 'synthetic',
+  )
   const chartColors = ['#46785c', '#9eae89', '#c1a66d', '#7d9991', '#a9b39b']
   const categoryGradient = stats.categories
     .map((item, index) => {
@@ -94,10 +104,6 @@ export function App({
     setCategory('All')
     setPriority('All')
   }
-  const refresh = () => {
-    setStatus('loading')
-    setRevision((value) => value + 1)
-  }
   const openCategory = (value: EmailCategory) => {
     setCategory(value)
     setPriority('All')
@@ -105,7 +111,10 @@ export function App({
     setView('Inbox explorer')
   }
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-retained-live-message-count={mailbox.retainedLiveMessageCount}
+    >
       <aside className="sidebar">
         <a
           className="brand"
@@ -124,10 +133,12 @@ export function App({
           </span>
         </a>
         <div className="workspace">
-          <span className="workspace-icon">D</span>
+          <span className="workspace-icon">{isLive ? 'G' : 'D'}</span>
           <div>
-            <strong>Demo workspace</strong>
-            <span>Synthetic email data</span>
+            <strong>{isLive ? 'Gmail workspace' : 'Demo workspace'}</strong>
+            <span>
+              {isLive ? 'Partial metadata sample' : 'Synthetic email data'}
+            </span>
           </div>
           <span className="workspace-dot" />
         </div>
@@ -153,8 +164,9 @@ export function App({
           <ShieldCheck size={22} />
           <strong>Your inbox. Your space.</strong>
           <p>
-            This demo stays in your browser. No Gmail connection. No external
-            AI.
+            {isLive
+              ? 'Live metadata stays in this page session. No bodies, attachments, or external AI.'
+              : 'This demo stays in your browser. No Gmail connection. No external AI.'}
           </p>
           <button onClick={() => setView('Settings')}>
             Explore our approach <ArrowRight size={14} />
@@ -163,7 +175,7 @@ export function App({
         <div className="sidebar-footer">
           <span className="avatar avatar-0">DI</span>
           <div>
-            <strong>Demo explorer</strong>
+            <strong>{isLive ? 'Gmail explorer' : 'Demo explorer'}</strong>
             <small>Personal workspace</small>
           </div>
           <span className="demo-dot" />
@@ -178,7 +190,7 @@ export function App({
           <div className="topbar-right">
             <span className="mock-pill">
               <span />
-              Mock data
+              {sourceLabel}
             </span>
             <span className="local-indicator">
               <ShieldCheck size={15} /> Browser only
@@ -204,7 +216,9 @@ export function App({
                   : view === 'Inbox explorer'
                     ? 'Search, explore, and understand why a message belongs.'
                     : view === 'Analytics'
-                      ? 'Explore trends across the synthetic mailbox. Every chart uses mock data.'
+                      ? isLive
+                        ? 'Explore this Gmail metadata sample. These charts do not cover your full mailbox.'
+                        : 'Explore trends across the synthetic mailbox. Every chart uses mock data.'
                       : 'Transparent by design. You’re always in control of what comes next.'}
               </p>
             </div>
@@ -217,28 +231,68 @@ export function App({
                 size={16}
                 className={status === 'loading' ? 'spinning' : ''}
               />
-              {status === 'loading' ? 'Loading demo…' : 'Refresh demo'}
+              {status === 'loading'
+                ? isLive
+                  ? 'Loading Gmail…'
+                  : 'Loading demo…'
+                : isLive
+                  ? 'Refresh Gmail'
+                  : 'Refresh demo'}
             </button>
           </div>
+          <GmailConnection authorization={authorization} state={mailbox.auth} />
           <div className="demo-banner">
             <Sparkles size={17} />
             <p>
-              <strong>A preview of a calmer inbox.</strong> All messages,
-              insights, and processing metrics are synthetic. Gmail is not
-              connected.
+              {isLive ? (
+                <>
+                  <strong>Live Gmail · partial coverage.</strong> Up to the
+                  newest 100 messages, excluding Spam and Trash. Metadata only;
+                  no bodies or attachments. All charts describe this sample.
+                </>
+              ) : (
+                <>
+                  <strong>A preview of a calmer inbox.</strong> All messages,
+                  insights, and processing metrics are synthetic. Gmail is not
+                  connected.
+                </>
+              )}
             </p>
-            <span>DEMO MODE</span>
+            <span>{isLive ? 'READ ONLY' : 'DEMO MODE'}</span>
           </div>
+          {isLive && (
+            <p className="coverage-note" role="status">
+              {mailbox.coverage
+                ? `${mailbox.coverage.loaded} of ${mailbox.coverage.discovered} selected messages loaded; ${mailbox.coverage.failed} failed. ${mailbox.coverage.hasMore ? 'More messages exist outside this sample.' : 'End of this listing reached.'} Spam and Trash excluded; this is not a full-mailbox sync.`
+                : mailbox.progress
+                  ? `Loading ${mailbox.progress.phase}: ${mailbox.progress.completed} of ${mailbox.progress.total}. Partial coverage only.`
+                  : 'Preparing the newest-message sample.'}
+            </p>
+          )}
+          {isLive && mailbox.diagnostics && (
+            <GmailDiagnostics
+              diagnostics={mailbox.diagnostics}
+              durationMs={mailbox.durationMs}
+            />
+          )}
           {status === 'loading' ? (
             <StatusPanel
-              title="Preparing your demo"
-              description="Loading synthetic messages and applying local classification rules."
+              title={isLive ? 'Reading Gmail metadata' : 'Preparing your demo'}
+              description={
+                isLive
+                  ? 'Retrieving up to 100 messages with read-only requests. You can disconnect to cancel.'
+                  : 'Loading synthetic messages and applying local classification rules.'
+              }
             />
           ) : status === 'error' ? (
             <StatusPanel
               error
-              title="The demo could not load"
-              description="The local message source failed validation or could not be read. Try loading it again."
+              title={
+                isLive
+                  ? 'Gmail metadata could not load'
+                  : 'The demo could not load'
+              }
+              description={mailbox.error}
               action="Try again"
               onAction={refresh}
             />
@@ -248,7 +302,11 @@ export function App({
                 <>
                   <div className="section-kicker">
                     <span>YOUR INBOX AT A GLANCE</span>
-                    <span>Mock mailbox · 8–31 Oct 2026</span>
+                    <span>
+                      {isLive
+                        ? `Gmail sample · ${rangeLabel}`
+                        : 'Mock mailbox · 8–31 Oct 2026'}
+                    </span>
                   </div>
                   <div className="stat-grid">
                     {[
@@ -271,9 +329,15 @@ export function App({
                         icon: Activity,
                       },
                       {
-                        label: 'Metadata-only decisions',
-                        value: `${Math.round((metrics.avoidance ?? 0) * 100)}%`,
-                        detail: 'Simulated retrieval policy',
+                        label: isLive
+                          ? 'Metadata loaded'
+                          : 'Metadata-only decisions',
+                        value: isLive
+                          ? metrics.metadataOnly
+                          : `${Math.round((metrics.avoidance ?? 0) * 100)}%`,
+                        detail: isLive
+                          ? 'No bodies requested'
+                          : 'Simulated retrieval policy',
                         icon: ShieldCheck,
                       },
                     ].map(({ label, value, detail, icon: Icon }) => (
@@ -292,7 +356,7 @@ export function App({
                       <div className="panel-heading">
                         <div>
                           <h2>A place for everything</h2>
-                          <p>Category distribution · mock data</p>
+                          <p>Category distribution · {sourceLabel}</p>
                         </div>
                         <span className="soft-icon">
                           <BarChart3 size={18} />
@@ -305,7 +369,7 @@ export function App({
                             background: `conic-gradient(${categoryGradient})`,
                           }}
                           role="img"
-                          aria-label={`Synthetic category distribution: ${stats.total} messages across ${categories.length} categories`}
+                          aria-label={`${sourceLabel} category distribution: ${stats.total} messages across ${categories.length} categories`}
                         >
                           <div>
                             <strong>{stats.total}</strong>
@@ -353,7 +417,7 @@ export function App({
                       <div className="panel-heading">
                         <div>
                           <h2>A little attention, please</h2>
-                          <p>Recent high-priority messages · mock data</p>
+                          <p>Recent high-priority messages · {sourceLabel}</p>
                         </div>
                         <span className="attention-dot" />
                       </div>
@@ -394,7 +458,7 @@ export function App({
                       <div className="panel-heading">
                         <div>
                           <h2>Familiar faces</h2>
-                          <p>Recurring sender patterns · mock data</p>
+                          <p>Recurring sender patterns · {sourceLabel}</p>
                         </div>
                         <button
                           className="text-button"
@@ -410,7 +474,11 @@ export function App({
                           </span>
                           <div>
                             <strong>{sender.name}</strong>
-                            <span>Recurring synthetic sender</span>
+                            <span>
+                              {isLive
+                                ? 'Sender in this sample'
+                                : 'Recurring synthetic sender'}
+                            </span>
                           </div>
                           <strong>
                             {sender.count}
@@ -423,7 +491,11 @@ export function App({
                       <div className="panel-heading">
                         <div>
                           <h2>Less fetching. More intention.</h2>
-                          <p>Processing policy simulation</p>
+                          <p>
+                            {isLive
+                              ? 'Current metadata retrieval'
+                              : 'Processing policy simulation'}
+                          </p>
                         </div>
                         <ShieldCheck size={19} />
                       </div>
@@ -432,8 +504,9 @@ export function App({
                         <span>of {stats.total} messages</span>
                       </div>
                       <p>
-                        Classified from metadata under the demo policy.
-                        Unfamiliar messages are marked for deeper review.
+                        {isLive
+                          ? 'All loaded messages were classified from metadata. Unfamiliar messages remain visible; this phase never fetches bodies.'
+                          : 'Classified from metadata under the demo policy. Unfamiliar messages are marked for deeper review.'}
                       </p>
                       <div className="efficiency-track">
                         <span
@@ -446,11 +519,16 @@ export function App({
                         <span>
                           <i /> Metadata only
                         </span>
-                        <span>{metrics.bodyRequests} body-request events</span>
+                        <span>
+                          {metrics.bodyRequests}{' '}
+                          {isLive ? 'body requests' : 'body-request events'}
+                        </span>
                       </div>
                       <div className="quiet-note">
-                        <CircleHelp size={15} /> Simulated decisions, not
-                        measured Gmail API savings.
+                        <CircleHelp size={15} />{' '}
+                        {isLive
+                          ? 'Metadata-only counts do not establish API savings or accuracy.'
+                          : 'Simulated decisions, not measured Gmail API savings.'}
                       </div>
                     </section>
                   </div>
@@ -459,10 +537,17 @@ export function App({
                       <Check size={17} />
                     </span>
                     <div>
-                      <strong>Demo processing complete</strong>
+                      <strong>
+                        {isLive
+                          ? 'Gmail sample processing complete'
+                          : 'Demo processing complete'}
+                      </strong>
                       <p>
-                        {metrics.indexed} synthetic messages indexed ·{' '}
-                        {metrics.classified} classifications · {stats.unknown}{' '}
+                        {metrics.indexed}{' '}
+                        {isLive
+                          ? 'Gmail metadata records loaded'
+                          : 'synthetic messages indexed'}{' '}
+                        · {metrics.classified} classifications · {stats.unknown}{' '}
                         need a closer look
                       </p>
                     </div>
@@ -520,14 +605,21 @@ export function App({
                   </div>
                   <div className="results-heading">
                     <strong>{visible.length} messages</strong>
-                    <span>Synthetic mailbox · newest first</span>
+                    <span>
+                      {isLive ? 'Gmail sample' : 'Synthetic mailbox'} · newest
+                      first
+                    </span>
                   </div>
                   {visible.length ? (
                     <MessageList items={visible} onSelect={setSelected} />
                   ) : (
                     <StatusPanel
                       title="No messages found"
-                      description="Try another search or clear your filters to explore the demo mailbox."
+                      description={
+                        isLive
+                          ? 'This sample may be empty or no messages match. Clear filters or refresh the Gmail sample.'
+                          : 'Try another search or clear your filters to explore the demo mailbox.'
+                      }
                       action="Clear filters"
                       onAction={resetFilters}
                     />
@@ -540,7 +632,7 @@ export function App({
                     <div className="panel-heading">
                       <div>
                         <h2>Category breakdown</h2>
-                        <p>Number of synthetic messages per category.</p>
+                        <p>Number of messages per category · {sourceLabel}.</p>
                       </div>
                     </div>
                     {stats.categories.map((item, index) => (
@@ -567,7 +659,8 @@ export function App({
                       <div>
                         <h2>Top senders</h2>
                         <p>
-                          Synthetic message counts; tied counts sort by name.
+                          {isLive ? 'Sample' : 'Synthetic'} message counts; tied
+                          counts sort by name.
                         </p>
                       </div>
                     </div>
@@ -588,7 +681,8 @@ export function App({
                       <div>
                         <h2>Inbox rhythm</h2>
                         <p>
-                          Daily message frequency · mock data · 8–31 October.
+                          Daily message frequency · {sourceLabel} ·{' '}
+                          {isLive ? rangeLabel : '8–31 October'}.
                         </p>
                       </div>
                     </div>
@@ -610,8 +704,9 @@ export function App({
                       ))}
                     </div>
                     <p className="chart-caption">
-                      This fixture has four messages per day. It demonstrates
-                      aggregation, not a real behavioral trend.
+                      {isLive
+                        ? 'Counts describe only the loaded sample, not total daily mailbox volume.'
+                        : 'This fixture has four messages per day. It demonstrates aggregation, not a real behavioral trend.'}
                     </p>
                   </section>
                   <section className="panel">
@@ -619,7 +714,9 @@ export function App({
                       <div>
                         <h2>Attention & efficiency</h2>
                         <p>
-                          Deterministic priority rules and simulated retrieval.
+                          {isLive
+                            ? 'Rule priorities and actual metadata-only classifications in this sample.'
+                            : 'Deterministic priority rules and simulated retrieval.'}
                         </p>
                       </div>
                     </div>
@@ -638,12 +735,17 @@ export function App({
                       <strong>{metrics.metadataOnly}</strong>
                     </div>
                     <div className="metric-row">
-                      <span>Deeper retrieval requested (simulated)</span>
+                      <span>
+                        {isLive
+                          ? 'Full bodies requested'
+                          : 'Deeper retrieval requested (simulated)'}
+                      </span>
                       <strong>{metrics.bodyRequests}</strong>
                     </div>
                     <p className="quiet-note">
-                      No Gmail calls, actual fetch savings, accuracy score, or
-                      cost estimate have been measured.
+                      {isLive
+                        ? 'No classification accuracy, baseline API savings, or cost estimate has been measured.'
+                        : 'No Gmail calls, actual fetch savings, accuracy score, or cost estimate have been measured.'}
                     </p>
                   </section>
                 </div>
@@ -656,13 +758,21 @@ export function App({
                         <h2>Data source</h2>
                         <p>A clear boundary between demo and personal data.</p>
                       </div>
-                      <span className="mock-pill">Mock mode</span>
+                      <span className="mock-pill">{sourceLabel}</span>
                     </div>
                     <div className="setting-row">
                       <div>
-                        <strong>Synthetic repository</strong>
+                        <strong>
+                          {isLive
+                            ? 'Gmail metadata adapter'
+                            : 'Synthetic repository'}
+                        </strong>
                         <p>
-                          {stats.total} generated messages. Session memory only.
+                          {stats.total}{' '}
+                          {isLive
+                            ? 'loaded metadata records'
+                            : 'generated messages'}
+                          . Session memory only.
                         </p>
                       </div>
                       <span className="connected-label">
@@ -673,13 +783,12 @@ export function App({
                       <div>
                         <strong>Gmail connection</strong>
                         <p>
-                          Planned for Phase 2. No Google scripts or credentials
-                          are used.
+                          Read-only authorization starts only with your explicit
+                          action. Disconnect clears live data and requests
+                          Google revocation.
                         </p>
                       </div>
-                      <button className="button" disabled>
-                        Coming in Phase 2
-                      </button>
+                      <span className="tag">{mailbox.auth.status}</span>
                     </div>
                     <h3>Planned sync preferences</h3>
                     <p>
@@ -695,9 +804,10 @@ export function App({
                     <ShieldCheck size={30} />
                     <h2>Privacy starts with less.</h2>
                     <p>
-                      This application reads a bundled synthetic dataset. It
-                      does not connect to your mailbox, persist messages, load
-                      remote email images, or send data to external models.
+                      Mock data is the default. If you authorize Gmail, only a
+                      bounded metadata sample is read. Messages and tokens stay
+                      in application memory. No remote email images or external
+                      AI services are used.
                     </p>
                     <ul>
                       <li>Plain-text message rendering</li>
@@ -706,9 +816,9 @@ export function App({
                       <li>No analytics or tracking services</li>
                     </ul>
                     <p>
-                      Reloading resets session state. Future export, deletion,
-                      and authorization controls are documented, not
-                      implemented.
+                      Reloading resets authorization and message state.
+                      Disconnect clears live data and requests revocation.
+                      Export and durable storage controls remain planned.
                     </p>
                   </section>
                 </div>
@@ -720,12 +830,16 @@ export function App({
               <span className="footer-mark" /> Built for clarity. Designed for
               privacy.
             </span>
-            <span>Inbox Intelligence · Phase 1 preview</span>
+            <span>Inbox Intelligence · Phase 2 preview</span>
           </footer>
         </main>
       </div>
       {selected && (
-        <MessageDetail message={selected} onClose={() => setSelected(null)} />
+        <MessageDetail
+          message={selected}
+          isLive={isLive}
+          onClose={() => setSelection(null)}
+        />
       )}
     </div>
   )

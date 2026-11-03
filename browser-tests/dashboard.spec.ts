@@ -86,8 +86,8 @@ test('desktop workflows, safe rendering, network boundary and keyboard dialog', 
   })
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await expect(
-    page.getByRole('button', { name: 'Coming in Phase 2' }),
-  ).toBeDisabled()
+    page.getByRole('button', { name: 'Connect Gmail' }),
+  ).toBeEnabled()
   await page.screenshot({
     path: `${output}/desktop-settings.png`,
     fullPage: true,

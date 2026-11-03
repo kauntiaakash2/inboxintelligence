@@ -5,9 +5,11 @@ import { formatDate } from './formatDate'
 export function MessageDetail({
   message,
   onClose,
+  isLive = false,
 }: {
   message: ClassifiedMessage
   onClose: () => void
+  isLive?: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -27,7 +29,9 @@ export function MessageDetail({
       aria-labelledby="detail-title"
     >
       <div className="detail-top">
-        <span className="mock-pill">Synthetic message</span>
+        <span className="mock-pill">
+          {isLive ? 'Gmail metadata · body not retrieved' : 'Synthetic message'}
+        </span>
         <button
           className="icon-button"
           onClick={onClose}
@@ -45,7 +49,11 @@ export function MessageDetail({
           {message.unread ? 'Unread' : 'Read'}
         </span>
       </div>
-      <div className="detail-body">{message.body ?? message.snippet}</div>
+      <div className="detail-body">
+        {isLive
+          ? 'Message bodies and attachments are not retrieved in metadata-only mode.'
+          : (message.body ?? message.snippet)}
+      </div>
       <section className="classification-box">
         <h3>
           <Sparkles size={17} /> Why this category?
@@ -78,7 +86,8 @@ export function MessageDetail({
         </p>
       </section>
       <div className="detail-labels">
-        <ArrowDown size={15} /> Gmail-style mock labels:{' '}
+        <ArrowDown size={15} />{' '}
+        {isLive ? 'Gmail labels:' : 'Gmail-style mock labels:'}{' '}
         {message.labels.join(', ')}
       </div>
     </dialog>
