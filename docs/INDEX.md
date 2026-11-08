@@ -99,3 +99,23 @@ Every document below describes this project. Implemented and planned behavior ar
 | [Phase 3A change report](quality/PHASE3A_CHANGE_REPORT.md)         | Complete file inventory, review boundaries and recommended Phase 3B                                              |
 
 Phase 3A updates the existing PRD, roadmap, metrics, UX/design/screen inventory, privacy/security/threat model, architecture/data model/storage ADR, test strategy, verification and learning records. Historical Phase 1/2 command results remain attributed to their own runs.
+
+## Unified public/workspace design additions
+
+- [Clario adaptation](design/CLARIO_ADAPTATION.md): observed design, independent asset provenance and linked license restrictions.
+- [ADR 0006](architecture/ADR/0006-public-workspace-design-boundary.md): minimal routing, public/private state separation, shared theme and trade-offs.
+- [Design change report](quality/CLARIO_CHANGE_REPORT.md): complete file inventory, verification and remaining limitations.
+- Existing design system, UX, architecture, privacy, product, roadmap, test/verification and learning records describe the actual update.
+
+[Design-system lessons](learning/DESIGN_SYSTEM_CONCEPTS.md) covers all ten requested learning topics with code references, alternatives, mistakes, tests and industry practice. Five new interview answers are appended to the existing preparation document.
+
+## Email workspace revision
+
+- [UX research and study protocol](product/EMAIL_UX_RESEARCH.md): sourced evidence/confidence, hypotheses, before/after structure and unexecuted study.
+- [Reader design](architecture/GMAIL_READER_DESIGN.md): future bounded MIME/body/thread reading and safe rendering; current METADATA unchanged.
+- [Sending design](architecture/GMAIL_SEND_DESIGN.md): future explicit compose/review/incremental authority/MIME/uncertain outcomes; no sending now.
+- [AI design](architecture/AI_SUMMARIZATION_DESIGN.md): future summary/action/deadline/deep-analysis consent, evidence, injection evaluation and budgets.
+- [ADR 0007](architecture/ADR/0007-inbox-first-workspace.md): Inbox-first entry and independent display settings decision.
+- [Workspace change report](quality/WORKSPACE_CHANGE_REPORT.md): scoped inventory, preserved uncommitted baseline, evidence and limitations.
+
+[Email-workspace lessons](learning/EMAIL_WORKSPACE_CONCEPTS.md) covers HCI, user-centered/qualitative/quantitative research, usability tests, MIME/threads, incremental consent, safe reading, sending and prompt injection with code walkthroughs and trade-offs.

@@ -1,3 +1,4 @@
+import { navigation, source, filters } from './fixtures/workspaceControls'
 import { expect, test } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 const output = 'output/playwright'
@@ -16,19 +17,29 @@ test('desktop workflows, safe rendering, network boundary and keyboard dialog', 
     )
       external.push(request.url())
   })
-  await page.goto('/')
-  await expect(page.getByText('Demo processing complete')).toBeVisible()
+  await page.goto('/app/overview')
+  await expect(page.locator('.app-shell[data-load-status=ready]')).toBeVisible()
   await page.screenshot({
     path: `${output}/desktop-overview.png`,
     fullPage: true,
   })
-  await page.getByRole('button', { name: /Inbox explorer/ }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: /Inbox explorer/, exact: true })
+    .click()
   await page.getByRole('textbox', { name: 'Search messages' }).fill('INTERVIEW')
   await expect(page.getByText('6 messages', { exact: true })).toBeVisible()
-  await page
+  await (
+    await filters(page)
+  )
     .getByLabel('Category', { exact: true })
     .selectOption('Jobs and internships')
-  await page.getByLabel('Priority', { exact: true }).selectOption('High')
+  await (
+    await filters(page)
+  )
+    .getByLabel('Priority', { exact: true })
+    .selectOption('High')
   await expect(page.getByText('6 messages', { exact: true })).toBeVisible()
   const firstMessage = page.locator('.message-row').first()
   await firstMessage.focus()
@@ -62,7 +73,11 @@ test('desktop workflows, safe rendering, network boundary and keyboard dialog', 
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).not.toBeVisible()
   await expect(firstMessage).toBeFocused()
-  await page.getByLabel('Category', { exact: true }).selectOption('Orders')
+  await (
+    await filters(page)
+  )
+    .getByLabel('Category', { exact: true })
+    .selectOption('Orders')
   await expect(
     page.getByRole('heading', { name: 'No messages found' }),
   ).toBeVisible()
@@ -76,7 +91,11 @@ test('desktop workflows, safe rendering, network boundary and keyboard dialog', 
     page.getByRole('heading', { name: 'No messages found' }),
   ).toBeVisible()
   expect(await page.locator('img').count()).toBe(0)
-  await page.getByRole('button', { name: 'Analytics', exact: true }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: 'Insights', exact: true })
+    .click()
   await expect(
     page.getByRole('heading', { name: 'Inbox rhythm' }),
   ).toBeVisible()
@@ -84,9 +103,13 @@ test('desktop workflows, safe rendering, network boundary and keyboard dialog', 
     path: `${output}/desktop-analytics.png`,
     fullPage: true,
   })
-  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click()
   await expect(
-    page.getByRole('button', { name: 'Connect Gmail' }),
+    (await source(page)).getByRole('button', { name: 'Connect Gmail' }),
   ).toBeEnabled()
   await page.screenshot({
     path: `${output}/desktop-settings.png`,
@@ -101,8 +124,8 @@ test('mobile layouts, touch navigation and reduced motion', async ({
   await mkdir(output, { recursive: true })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
-  await expect(page.getByText('Demo processing complete')).toBeVisible()
+  await page.goto('/app/overview')
+  await expect(page.locator('.app-shell[data-load-status=ready]')).toBeVisible()
   const checkOverflow = async () =>
     expect(
       await page.evaluate(
@@ -114,8 +137,10 @@ test('mobile layouts, touch navigation and reduced motion', async ({
     path: `${output}/mobile-overview.png`,
     fullPage: true,
   })
-  for (const view of ['Inbox explorer', 'Analytics', 'Settings']) {
-    await page
+  for (const view of ['Inbox explorer', 'Insights', 'Settings']) {
+    await (
+      await navigation(page)
+    )
       .getByRole('button', {
         name: view === 'Inbox explorer' ? /Inbox explorer/ : view,
         exact: view !== 'Inbox explorer',
@@ -127,7 +152,11 @@ test('mobile layouts, touch navigation and reduced motion', async ({
       fullPage: true,
     })
   }
-  await page.getByRole('button', { name: /Inbox explorer/ }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: /Inbox explorer/, exact: true })
+    .click()
   await page.locator('.message-row').first().click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await checkOverflow()
@@ -144,7 +173,7 @@ test('rendered loading and sanitized error can retry', async ({ page }) => {
       body: `export class MockEmailRepository { async list() { await new Promise(resolve=>setTimeout(resolve,800)); throw new Error('private provider payload'); } }`,
     }),
   )
-  await page.goto('/')
+  await page.goto('/app/overview')
   await expect(
     page.getByRole('heading', { name: 'Preparing your demo' }),
   ).toBeVisible()

@@ -39,3 +39,11 @@ Explain each milestone through its problem, concept, chosen approach, alternativ
 ## Personalized onboarding boundary
 
 Inspect domain/preferences.ts, preferenceStore, usePreferences and onboarding selectors before changing setup. Goals override role defaults using existing category IDs only. All choices are optional; keep Gmail and dashboard usable. Never add mail, account identifiers, tokens, inferred traits or free text to the preference schema. Unknown schema versions fall back safely; an explicit migration must precede accepting another version. Clear only the app preference key. Test read/write/delete failures, keyboard use and source-state preservation. Run format:check and intercepted Chromium checks alongside the existing gates. Phase 3A changes must remain uncommitted until owner review, per the current instruction.
+
+## Public/workspace identity
+
+Entry serves the public landing page at / and lazy-loads the existing workspace at known /app paths. useDashboardNavigation owns fixed view URLs/popstate; never put private IDs, search values or tokens into history. Public preview accepts no mailbox state and uses synthetic fixtures only. Shared dark/lime semantic tokens live in styles/tokens.css; preserve onboarding business logic/format and Gmail contracts during styling. Run public routing/privacy/contrast checks and production-preview Chromium after visual changes. Template references require documented license review; no proprietary assets were incorporated. No commit/push/deployment without owner approval.
+
+## Email workspace revision boundary
+
+/app is Inbox-first unless a valid separate display default is chosen; /app/overview preserves explicit Overview. Keep global local search, filters, source labels and metadata-only disclosure. Workspace density/layout/default use a separate allowlisted key; never migrate/expand the original onboarding schema merely for UI settings. MessageContent is shared by dialog/pane and accepts already-loaded domain records, never raw Gmail HTML or a fetch client. FULL reading, sending and AI are designs requiring separate scopes of work; do not infer authorization from a reading pane or Gmail-like layout. User-study protocol is unexecuted; no participant outcomes may be invented. Preserve all preexisting uncommitted Clario work and do not commit/push/deploy without approval.

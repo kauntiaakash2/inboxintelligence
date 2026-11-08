@@ -83,3 +83,48 @@ flowchart LR
 Read preferences lazily on mount; do not write in a React effect or auto-connect Gmail. Save/skip/reset are explicit events. Schema errors use defaults; read/write/delete exceptions remain content-free. Unsupported versions are preserved but ignored until explicit save/reset; a future migration must validate input and output. Version 1 is the first preference schema, so there is no legacy migration to invent.
 
 Browser localStorage is the sole durable exception for declared preferences, separate from session-only mail/token/metrics. No IndexedDB, server/profile API, external transfer, cross-tab listener or account association is implemented. One small synchronous string is appropriate here; transactional mail/checkpoint storage remains the responsibility of a future account-scoped IndexedDB layer. See ADR 0005.
+
+## Public/workspace routing and shared design
+
+```mermaid
+flowchart TD
+  Browser[Document URL] --> Entry[Entry route boundary]
+  Entry --> Public[LandingPage at /]
+  Public --> Preview[Bundled synthetic fixture only]
+  Entry --> Chunk[Lazy App chunk for known /app paths]
+  Chunk --> Workspace[Existing App / auth / useMailbox / preferences]
+  Workspace --> Views[History API view paths]
+  Tokens[Shared semantic CSS tokens] --> Public
+  Tokens --> Workspace
+```
+
+Entry uses normal document links for public↔workspace transitions and a small useDashboardNavigation hook for four known in-place app views. This is deliberately not a general router framework: no nested route graph, URL-encoded filters or cross-boundary retained mailbox store is needed. popstate restores the view without remounting App. Private values never enter pushState (state is null and paths contain only view names). Direct loads/reloads restore a view while existing auth/data lifecycle rules still apply. Unknown paths render recovery UI; deployed hosts must supply an SPA document fallback.
+
+LandingPage has no auth/mailbox/preference dependency; ProductPreview accepts no data props and derives only synthetic counts with existing pure classify/summarize functions. App is lazy-loaded with an accessible loading status. The public privacy notice is the existing Markdown file emitted as a static URL, not a new policy/service. No server, account authentication, tracker, remote font, template asset or third-party routing dependency was added.
+
+src/styles/tokens.css is shared via the existing Vite/Tailwind CSS pipeline. Semantic theme utility aliases reference runtime custom properties. Existing component selectors are adapted instead of replacing the dashboard or onboarding. Chart gradients reference chart tokens; business mapping/priority algorithms and storage formats are unchanged. See ADR 0006 and ../design/CLARIO_ADAPTATION.md.
+
+## Email workspace revision: presentation and future capability boundaries
+
+The existing metadata pipeline, OAuth service, source/session key, classifier and selectors remain unchanged. App now defaults /app to Inbox (or a saved display default); /app/overview remains a legacy URL for consolidated Insights. useDashboardNavigation still holds only fixed view paths/null history state. Global search and contextual category filters use the existing selector; no Gmail q operator or wider mailbox request is added.
+
+features/settings/workspacePreferences.ts validates a separate four-field version-1 display record and provides a bounded, failure-safe local hook. WorkspaceSettings edits density/layout/default; the Phase 3A preference schema/mappings/store remain untouched. MessageContent extracts the existing text-only detail body/explanation; both native MessageDetail and MessageReadingPane use it. Responsive matchMedia decides whether the selected layout can be shown as a pane. Neither renderer owns an API client or fetches a body. Selection still references message ID plus source/session key; disconnect/expiry clears it.
+
+```mermaid
+flowchart LR
+ Metadata[Existing METADATA repository / validated records] --> Classify[Unchanged classify/select pipeline]
+ Classify --> List[Inbox message rows / local search]
+ List --> Selection[Session-bound selection]
+ Selection --> Content[Shared text-only MessageContent]
+ Content --> Dialog[Native dialog]
+ Content --> Pane[Optional wide pane]
+ Display[Separate declared display enums] --> Layout[Density / default / layout only]
+ Layout --> List
+ Layout --> Pane
+```
+
+The future full reader adds a separately approved content port, not a hidden branch in MessageList. Sending adds a separate capability-gated write transport, not new methods on the current GET-only adapter. Future AI receives only an explicitly selected approved set after transfer consent and has no action tools. Designs: GMAIL_READER_DESIGN.md, GMAIL_SEND_DESIGN.md, AI_SUMMARIZATION_DESIGN.md. No such implementation is included now. Decision/routing trade-offs: ADR/0007-inbox-first-workspace.md.
+
+## Simplification composition
+
+WorkspaceNavigation renders one visible destination set (desktop sidebar or native mobile drawer). App retains source, selection, search and view ownership; no private state enters navigation/storage. Overview and Analytics URLs now present the same consolidated Insights content with original aggregators. Disclosure provides native form/source expansion, outside-pointer and Escape handling; background disclosures leave modal Escape untouched. Settings is the sole owner of density/layout/default editing. Sidebar state extends only the separate display record through an exact v1-to-v2 migration. Split columns exist only while a selected message is present. No service, repository, classification, onboarding mapping or message retrieval contract changes.

@@ -37,3 +37,11 @@ Can you explain the current code without reading every line? Can you predict how
 ## Phase 3A practice sequence
 
 After the React/hooks and browser-security fundamentals, work through [Phase 3A concepts](PHASE3A_CONCEPTS.md): controlled form draft → lifecycle separation → serialization/runtime validation → versioned storage/error handling → pure ranking → native keyboard interaction → privacy/outcome metrics. Trace a finance goal from OnboardingWizard through PreferenceStore to orderMessagesForDisplay. Exercise blocked storage and reset in synthetic tests. Explain why a preference schema is not a mailbox cache design before starting IndexedDB. Next: validated preference portability and consented usability evaluation (proposed Phase 3B).
+
+## Unified design practice
+
+After Phase 3A, follow [design-system concepts](DESIGN_SYSTEM_CONCEPTS.md): semantic token intent → CSS/Tailwind inheritance → component migration → responsive constraints → contrast/keyboard checks → public/private boundary → History API navigation → bundle loading → layered browser tests → asset/license provenance. Trace one lime action and one private-state boundary end to end; explain why no preference schema or Gmail scope change was necessary.
+
+## Email workspace and capability sequence
+
+Read [email-workspace concepts](EMAIL_WORKSPACE_CONCEPTS.md) after React/state/routing basics: HCI/task hierarchy → source-quality distinctions → formative study → display-state lifecycle → MIME/threads → content safety → incremental capability authorization → non-idempotent sending → AI evidence/injection evaluation. Implement and test the separately approved plain-text reader before rich HTML, sending or external summaries. Do not substitute engineering tests for participant evidence.

@@ -1,6 +1,6 @@
 # Product requirements — Inbox Intelligence
 
-Status: Phase 3A optional onboarding implemented and locally verified. Phase 2 browser authorization/metadata sample remains implemented, with mocked checks and separately attributed owner-reported live observations. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
+Status: inbox-first workspace revision builds on verified Phase 3A and the uncommitted unified design milestone. Phase 2 browser authorization/metadata sample remains implemented, with mocked checks and separately attributed owner-reported live observations. Personas, demand, time savings and commercial opportunity below are assumptions, not validated user research.
 
 ## 1. Problem statement
 
@@ -105,3 +105,32 @@ Current scope extends Phase 2 with optional onboarding; the original Phase 1 MoS
 - **Won't:** infer traits, store mail/tokens, add classifier categories, add onboarding telemetry, access live mail automatically or claim onboarding increases activation.
 
 Journey: open dashboard → optionally start setup → declare profile/goals or leave blank → review/toggle categories → confirm → inspect reordered view → edit/reset in Settings. Skip remembers only a skipped marker with null/empty choices. Acceptance: reload restores saved presentation, every original message remains available, High rule priorities precede lower bands, reset returns default ordering, storage errors do not block access, and preference changes do not start/stop Gmail requests. Metrics and limitations: METRICS.md. Future portability must remain explicit and independent of mailbox data.
+
+## Unified landing/workspace design milestone
+
+Implemented: / public product explanation and synthetic preview; /app workspace plus addressable Inbox/Analytics/Settings; shared black/charcoal/off-white/lime tokens across dashboard/onboarding; responsive public navigation, native FAQ, privacy/document links and real app CTAs. Adaptive processing/history/correction learning are visibly planned; no waitlist, fake signup/count, commercial pricing or automated-AI claim exists.
+
+Acceptance: public page never receives connected mailbox state or triggers Google requests; CTA opens mock workspace; direct view URLs and Back/Forward work; first-run/skip/returning/reset/restart setup and preference schema remain unchanged; existing Gmail/read-only, search/filter/detail and analytics checks pass. Token contrast, keyboard, reduced motion and narrow/wide layouts are tested; complete accessibility certification and user-outcome validation remain open.
+
+This design work does not implement Phase 3B portability, historical caching, SaaS login or deployment. Personas/demand remain hypotheses. The dashboard uses a quieter shared identity while public marketing uses expressive type/spacing. Reference provenance and license limits: ../design/CLARIO_ADAPTATION.md.
+
+## Email-workspace revision — current requirements and future scope
+
+The product is becoming an email workspace with contextual intelligence. The public Clario-inspired landing remains; /app now opens Inbox by default, and Overview remains reachable at /app/overview. Familiarity is a design hypothesis, not validated user research. Sources/confidence and the unexecuted comparative study are in EMAIL_UX_RESEARCH.md.
+
+**Implemented in this revision:** persistent global local search; sidebar Inbox/category shortcuts; sender/subject/category/date rows with explicit read/unread semantics; comfortable/compact density; optional wide-screen reading pane for already-loaded content; configurable Inbox/Overview/Analytics default; context links into analytics. Search/classification and all messages remain available. The default changes only root /app; explicit view URLs win. Gmail read state is displayed, never modified by opening a message. There is no Gmail operator parser, server-wide search or conversation grouping. The existing profile/goals preference schema and algorithms are unchanged; new display enums live in a separate version-1 allowlist.
+
+**Acceptance:** no initial storage write or automatic Google request; valid explicit display changes survive reload without storing mail/tokens; invalid/blocked storage uses safe defaults; reset touches only display settings. Desktop pane and mobile dialog preserve keyboard focus, metadata-only disclosure and filters. Source switching/disconnect clears private selection and results. Existing routes, optional setup, read-only OAuth, charts and rule explanations remain usable. Test evidence is recorded in ../quality/VERIFICATION.md; participant task outcomes are unmeasured.
+
+**Must next, separately scoped:** on-demand plain-text message reading under existing read-only permission, bounded MIME validation and session retention. No FULL/thread/body request is introduced now. **Should later:** deliberate thread expansion with coverage disclosure; optional sanitized HTML only after security review. **Could later:** independently enabled compose/reply/forward with incremental gmail.send consent and human review. **Won't now:** sending, Gmail label/read-state writes, attachment retrieval, inferred sensitive personas, external models or deployment.
+
+### Future AI product requirements (unimplemented)
+
+- Quick single-email and conversation summaries, action-item proposals and deadline identification must show uncertainty and evidence back to specific authorized source messages/spans.
+- Deep analysis must use a fixed user-approved message/time scope, disclose partial coverage, and require separate consent for any external provider transfer. Google OAuth alone is not AI-transfer consent.
+- Distinguish native Gmail Gemini UI from our future provider adapter; no claim that Gmail API exposes native Gemini summaries.
+- No model output may open URLs, expand the read set, send mail or execute actions. Defend against attacker-authored message instructions with data/policy separation, no action tools, strict output validation and adversarial evaluation.
+- Evaluate faithfulness, fact coverage, action/deadline precision/recall, source validity, abstention and injection resistance with independent labels and holdout splits. No quality/latency/cost result exists.
+- Initial proposed quick-summary limits: one message, approximately 4,000 input/400 output tokens, 8-second interactive deadline; external spend stays ₹0 without explicit approval. Deep runs need a budget preview. ₹0–₹300/month remains an unvalidated operating constraint, not promised pricing.
+
+Detailed gates: ../architecture/GMAIL_READER_DESIGN.md, GMAIL_SEND_DESIGN.md and AI_SUMMARIZATION_DESIGN.md. Those files describe designs, not implemented capabilities.

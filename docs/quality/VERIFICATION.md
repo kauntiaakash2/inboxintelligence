@@ -178,3 +178,161 @@ No new dependency/audit was run; Phase 2's recorded development-tool findings re
 - All **39 added/modified non-ignored files** are inventoried in PHASE3A_CHANGE_REPORT.md. A limited scan of those file contents for Google access-token/API-key/client-secret, private-key and GitHub-token literal patterns found zero matches. No environment files, build artifacts or dependencies were read by this scan. Pattern matching is not an exhaustive personal-information/security audit.
 - git check-ignore confirms .env.local and synthetic browser screenshots remain ignored. No local credential/environment file was displayed, edited or staged. Production source scan found browser storage access only in PreferenceStore; no console logger, sessionStorage/IndexedDB call or raw HTML insertion was found.
 - git diff confirms Gmail services/adapter, useMailbox, classifier, package/lockfile, Vite configuration and .env.example are unchanged. Scoped coverage includes the new preference store/hook/pure selectors. HEAD remains 4a06d27 on feat/personalized-onboarding; no staging, identity change or commit was performed.
+
+## 2026-11-03 — Unified public landing and dark design milestone
+
+### Baseline, scope and preservation
+
+Inspected a clean **feat/clario-design** branch at **5ad1b62**, the owner-checkpointed Phase 3A baseline. This differs from the prompt's expected onboarding branch; the existing scoped branch was preserved. Read agent/product/design/security/architecture/quality instructions and actual components/styles/tests. Reference listing, public preview and linked current license terms were consulted; CLARIO_ADAPTATION.md records independent provenance. No proprietary source/assets, new dependencies, credential/Cloud changes, real mailbox test, commit, push or deployment occurred.
+
+The public page is /; workspace paths are /app, /app/inbox, /app/analytics and /app/settings. Entry lazy-loads the existing App for fixed known paths and provides unknown-route recovery. History API view changes preserve the mounted app; normal public/app links navigate documents. Fresh loads reset session auth/mail, but browser back/forward cache may restore earlier memory; navigation is not deletion/revocation. Google consent remains governed by existing explicit controls.
+
+Gmail services/adapters, useMailbox, classifier, domain preferences, onboarding components, preference hook/store/format/migration and personalization algorithms have **no source diff**. App changes are limited to view navigation, chart-token references, a public link and skip-link/main focus semantics. Existing browser suites now start at /app; Inbox reload assertions verify the retained path, mock data, zero retained live results and no silent reconnection. A preexisting browser helper Page annotation now imports its type explicitly.
+
+### Executed verification
+
+| Command                                                   | Actual result                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| npm run typecheck                                         | Passed                                                                                                              |
+| npm run lint                                              | Passed                                                                                                              |
+| npm run test:coverage                                     | **155 tests in 8 files passed**; final complete run 12.65s                                                          |
+| Scoped V8 coverage                                        | **98.03% statements, 95.27% branches, 100% functions, 98.55% lines**; scope/thresholds unchanged                    |
+| npm run test:e2e                                          | **21 development Chromium scenarios passed**, including all 15 baseline scenarios; final complete run reported 1.0m |
+| npm run build                                             | Passed; lazy app and public entry assets emitted, including the intentionally public development privacy document   |
+| npx playwright test --config playwright.preview.config.ts | **18 production-preview Chromium scenarios passed**, recorded run 29.9s                                             |
+| npm run format:check                                      | Passed after documentation formatting; final whitespace/link checks recorded below                                  |
+
+Coverage continues to include domain/pure feature/repository/service/hook logic and reusable common components; it excludes most page/form JSX and the new app-boundary/navigation files. Those are covered by explicit unit/component/browser interactions. These durations are suite statistics, not user performance or Gmail sync benchmarks. Earlier failed attempts were corrected: disabled CSS import and transformed file URL in the contrast test; FAQ locator containing a decorative plus; stale reload/Overview-only assertions after view deep links were introduced. The first mobile header composition was refined and reverified. No failed gate is presented as passed before execution.
+
+Production checks use loopback 4102 and all Google traffic remains intercepted. The normal 4101 suite includes three dashboard scenarios whose source-module error injection requires Vite development; these are deliberately excluded from the production configuration. No real OAuth flow or mail was contacted by automated tests. No LCP/CLS/core-vitals or user-benefit claim is made.
+
+### Accessibility, rendering and privacy evidence
+
+Token checks enforce 4.5:1 normal-text pairs and 3:1 meaningful control/focus/chart-to-surface pairs. Measured token ratios: on-brand/brand **16.15:1**; secondary text/hover surface **6.31:1**; control border/hover surface **3.21:1**. Warning/error/success/info text against their named backgrounds measure **9.80/9.49/9.60/9.53:1** respectively. White text is not used on lime-filled primary actions. Decorative divider borders are separate from brighter control boundaries.
+
+Rendered solid-background text checks report no failures across / and all four app views plus onboarding profile/review. They do not analyze gradient pixels or replace full accessibility testing; public gradients use the same tested dark surface endpoints and were inspected visually. Native FAQ, mobile navigation disclosure, skip link, radio/checkbox keyboard use, modal Escape/focus, focus rings, reduced motion and no horizontal overflow are tested. Public widths: **1440, 768, 390 and 320**; workspace/onboarding retain 1440/390 evidence. Screen-reader, 200% zoom, non-Chromium, exhaustive state and formal WCAG certification remain open.
+
+Inspected synthetic artifacts under ignored output/playwright: **clario-hero-390.png**, **clario-hero-320.png**, **clario-landing-1440.png**, **clario-landing-390.png**, **mobile-overview.png**, and **phase3a-review-1440.png**. Additional tablet/desktop hero, analytics/settings, dialog, loading/error and fake Gmail screenshots were generated by the suites. These contain only bundled/intercepted synthetic application data. The separately named clario-reference.png captures only the public reference site and is never shipped as an asset.
+
+Public tests block external HTTPS, verify no storage reads or Google fetch/UI, and confirm an intercepted live fixture's email address/subjects/token do not appear after returning to /. ProductPreview accepts no connected data and calculates only synthetic counts; it does not publish private screenshots. Fixed view paths/history state contain no private fields. Gmail scope/GET-only, disconnect/state cleanup, mock switching and original denied/expired/partial-failure protection tests remain passing. Same-origin scripts/device access, browser history cache and unresolved historical development-tool audit findings remain risks; no fresh dependency audit was run.
+
+### Review and next milestone
+
+Implementation and documentation are ready for owner review; no commit or staging has been performed. Complete inventory: CLARIO_CHANGE_REPORT.md. Recommended next: visual/assistive-technology/zoom/non-Chromium review and consented usability feedback before agreeing Phase 3B portability/metrics. Deployment still requires separately approved host fallback, headers, legal/privacy and origin review. Historical cache/sync, adaptive processing, learned corrections, signup, payments and SaaS authentication remain planned.
+
+### Final unified-design repository review
+
+- Final production rebuild after the public privacy text update passed: HTML 0.68 kB (gzip 0.40), shared CSS 47.87 kB (gzip 10.16), public entry JS 251.66 kB (gzip 79.91), lazy App JS 53.53 kB (gzip 16.14), privacy Markdown 7.70 kB. These are emitted asset sizes, not real-user performance measurements.
+- Final production-preview run: **18/18 passed in 30.4s**. The preceding complete development run passed 21/21, including all original workflows; no code changed between those checks apart from finalized public document content.
+- npm run format:check and git diff --check passed. **49 Markdown documents** checked with zero broken relative links. All **39 changed files** are included in CLARIO_CHANGE_REPORT.md.
+- A limited credential-literal pattern scan of the 39 non-ignored changed file contents found zero Google access-token/API-key/client-secret, private-key or GitHub-token matches. Environment files, ignored outputs and dependencies were not read by this scan. This does not certify absence of every possible personal detail or security flaw.
+- .env.local and local screenshots are ignored; .env.local is not tracked or displayed/edited. Source scanning found no new console logger, raw HTML insertion or persistent token/mail storage path. The only production localStorage access remains the unchanged PreferenceStore; public prose mentions it accurately.
+- git diff confirms no source change to domain preferences, onboarding logic/mappings, settings preference logic, preference hook/store, Gmail/auth/metadata services/adapters, useMailbox, classifier, package/lockfile, Vite or .env.example. Color literals reside in the centralized token file, with the HTML theme-color fallback matching it.
+- HEAD remains **5ad1b62** on **feat/clario-design**. No staging/identity change/commit/push/deployment or actual Google account operation was performed. Formal accessibility, deployment headers/fallback and consented user feedback remain review tasks, not fabricated completed work.
+
+## 2026-11-03 — Inbox-first email workspace revision
+
+### Baseline and boundaries
+
+Started on feat/clario-design at 5ad1b62 with the **39-file uncommitted unified Clario milestone already present**. That work was preserved; no clean-tree assumption, reset, branch switch, staging or commit. Before changing the workspace, npm run test:e2e passed **21/21 in 48.0s** and synthetic baseline screenshots were copied to workspace-before-* names. Public LandingPage/ProductPreview/landing.css were not edited in this revision.
+
+Implemented: /app Inbox-first with saved display default, explicit /app/overview, global existing local search, familiar message rows/read state, category shortcuts, optional density/layout/default settings, contextual analytics and a wide pane using already-loaded text/metadata. Phase 3A profile/goals schema/mappings/store/wizard are unchanged. PersonalizationPanel gains only a compact presentation/copy option. Current Gmail OAuth, gmail.readonly constant, METADATA GET adapter, message discovery, token lifetime, source cancellation, classification, metrics and search selector are unchanged.
+
+Reader/send/AI documents are designs only. No FULL, thread, attachment or write request; no external AI, new dependency, Google setting, real mailbox operation, user-study participant, paid resource, deployment or push occurred. Source and study evidence: ../product/EMAIL_UX_RESEARCH.md. Scope and cumulative-diff interpretation: WORKSPACE_CHANGE_REPORT.md.
+
+### Executed checks and actual outcomes
+
+| Command                                                   | Actual result                                                                                                                                                                                                 |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm run typecheck                                         | Passed after implementation fixes                                                                                                                                                                             |
+| npm run lint                                              | Passed                                                                                                                                                                                                        |
+| npm run format:check                                      | Passed; final report formatting checked again below                                                                                                                                                           |
+| npm run test:coverage                                     | **174 tests in 9 files passed**; last recorded complete run 6.79s                                                                                                                                             |
+| Scoped V8 coverage                                        | **98.21% statements (496/505), 95.64% branches (395/413), 100% functions (126/126), 98.68% lines (449/455)**                                                                                                  |
+| npm run test:e2e                                          | **24/24 development Chromium scenarios passed** after final mobile connection fix; reported 1.0m                                                                                                              |
+| npm run build                                             | Passed; 2085 modules; HTML 0.68 kB, public entry JS 251.92 kB (gzip 80.05), lazy App JS 63.05 kB (gzip 18.22), shared CSS 48.53 kB (gzip 10.29), app CSS 9.56 kB (gzip 2.17), public privacy Markdown 8.90 kB |
+| npx playwright test --config playwright.preview.config.ts | **21/21 production Chromium scenarios passed in 35.8s**                                                                                                                                                       |
+| git diff --check                                          | Passed                                                                                                                                                                                                        |
+
+Coverage scope/thresholds remain unchanged: pure domain/feature/repository/service/hook .ts logic and reusable common components; most page/reader JSX and app navigation are verified through explicit interactions, not included in that percentage. The new display preference logic is included. Browser durations/bundle sizes are environment diagnostics, not usability improvements, sync timings, accuracy or AI performance. Production omits the three source-module-injection dashboard scenarios, which run on the development server; all landing/Gmail/onboarding/workspace suites run against dist.
+
+### Behavior, privacy and accessibility
+
+New unit cases cover strict four-field display validation, bad/unknown/oversized/expanded payloads, no initial write, read/write/delete failures, independent key reset, default/explicit route precedence, local search/filters, read/unread counts, pane activation/responsive change/cleanup and keyboard focus. Existing 155 tests remain in the passing 174. A read-only UI never marks a message read.
+
+Browser cases preserve all earlier workflows and add comfortable/compact geometry, native Display options, pane heading/Escape/current-row focus, Analytics navigation without a surprise modal, Back restoring reading context, 390px dialog fallback, default/reload/reset independent of onboarding and fake Gmail display changes with **unchanged request count and METADATA-only GETs**. Disconnect clears retained live records and the private detail. No message content/identifier/token is serialized into either preference key or route history.
+
+Visual QA exposed two real layout issues: mobile boilerplate pushed messages down, and a long connected-state Disconnect label overflowed its control. Concise Inbox-only summary/source copy, native progressive disclosure, adjacent reset and safe button wrapping fixed them. The normal first-run 390×844 test now asserts the first message starts within the viewport. This is a bounded layout check; long notices/expanded options can still require scrolling. A view/session selection guard prevents an already-open pane turning into an unexpected modal on Analytics navigation, and close focus uses current DOM lookup rather than retaining detached private row nodes.
+
+Other corrected test/development failures: strict object-to-record narrowing required a real type guard; browser-style exact options were removed from Testing Library role queries; direct-App fixtures were given the actual /app path; display selects gained explicit accessible names; duplicated test-local variable/missing disclosure activation were corrected. No failed command is represented as a passing run. No untrusted-input cast or real account was used to bypass a gate.
+
+### Inspected synthetic screenshots and comparison
+
+- Before: output/playwright/workspace-before-desktop-overview.png, workspace-before-mobile-overview.png, workspace-before-mobile-inbox.png. These were captured from the actual pre-change uncommitted design, not reconstructed mockups.
+- After: workspace-after-desktop-viewport.png, workspace-after-split-viewport.png, workspace-after-mobile-viewport.png; full-list variants workspace-after-desktop.png, workspace-after-split.png, workspace-after-mobile.png are also captured.
+- Existing suites regenerated synthetic Overview/Analytics/Settings/loading/error/native dialog/fake Gmail/onboarding captures. Public landing snapshots remain synthetic and visually unchanged.
+
+Actual desktop/mobile viewports were inspected. The default now prioritizes message access rather than KPI cards; header search and row hierarchy are visible, while Overview/Analytics remain available. All message/source labels remain explicit. Reduced motion, native keyboard controls and no horizontal overflow pass, including the repaired fake-live mobile state. Solid-background text/token contrast checks remain green; full screen-reader/zoom/non-Chromium certification is **not** claimed. No participant was studied and before/after speed or satisfaction improvements are **not measured**.
+
+### Documentation, preservation and remaining gates
+
+Research separates empirical papers, official capability docs, anecdotal complaints and product hypotheses. The proposed 6–8-person counterbalanced study has tasks, anonymous consented collection, denominators and proposed gates but no results. PRD/roadmap/design/architecture/security/OAuth/threat/test/journal/interview documents distinguish implemented workspace behavior from planned reader/send/AI capabilities. ADR 0007 explains the deliberate root-default change; the new display key does not migrate the original onboarding schema.
+
+A limited scan of **60 cumulative non-ignored changed files** found zero Google access-token/API-key/client-secret, private-key or GitHub-token literal matches. **56 Markdown documents** had zero broken relative links. Environment files, dependencies and ignored artifacts were not read by that scan; pattern checks are not comprehensive PII/security certification. .env.local and synthetic screenshots remain ignored. No refreshed dependency audit was run; historical development-tool findings and same-origin/device/browser-cache risks remain.
+
+The final diff is cumulative with the earlier uncommitted design. No source diff exists for Gmail services/repositories, useMailbox, domain preferences, profile/goal mappings, OnboardingWizard, original preference hook/store, classifier, selectMessages, package/lockfile, Vite or .env.example. Landing components/style are unchanged relative to the start of this revision. No tokens/mail persist; only separate declared preference allowlists do. HEAD remains 5ad1b62 on feat/clario-design.
+
+Remaining work: owner review of the cumulative change, the proposed formative study, formal accessibility/other-browser checks and separately approved plain-text FULL/MIME reader implementation. Rich HTML, threads, file downloads, sending, external summaries, complete synchronization/caching and deployment are not implemented. No commit/push/deployment is authorized by this report.
+
+## 2026-11-03 — UX simplification after owner rejection
+
+Scope: presentation and separate display-state persistence on feat/clario-design. Preserved all preexisting uncommitted Phase 3A/Clario/workspace work. No commit, push, deployment, additional permission, real mailbox access or external service added. This is engineering verification; owner visual acceptance and user-study outcomes remain open.
+
+| Check                                                     | Actual result                                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| npm run typecheck                                         | Passed                                                                                                                          |
+| npm run lint                                              | Passed, including temporary local verification scripts                                                                          |
+| npm run format:check                                      | Passed                                                                                                                          |
+| npm run test:coverage                                     | 179 tests / 9 files passed; enforced thresholds passed                                                                          |
+| npm run build                                             | Passed; Vite static bundle generated                                                                                            |
+| npm run test:e2e                                          | 29 Chromium tests passed, sequential final run (2.2m)                                                                           |
+| npx playwright test --config=playwright.preview.config.ts | 26 Chromium production-preview tests passed (1.1m)                                                                              |
+| Actual 200% Chromium zoom                                 | getZoom() = 2; 720 CSS px in a 1440px window, scrollWidth = 720; search, filters, drawer Escape/focus and message dialog passed |
+| Rendered interaction/visual inspection                    | 320, 390, 1024, 1440px; first-run, rail, drawer, filter and reader states; no horizontal overflow in checked flows              |
+| Supplemental drawer resize                                | Open at 320px → resize to 1024px closes drawer and focuses desktop toggle                                                       |
+| Protected-file comparison                                 | 27 protected files compared byte-for-byte against the task-start snapshot; no changes                                           |
+| git diff --check                                          | Passed                                                                                                                          |
+
+Coverage scope is the existing configured domain/feature .ts, hooks, repositories, services and reusable .tsx components, not all App rendering or CSS. Statements 95.00%, branches 93.17%, functions 97.14%, lines 95.82%. Native drawer behavior is deliberately exercised in Chromium rather than claimed from jsdom coverage. The extra final source-control assertion is rechecked in the focused simplification suite; its log is listed below.
+
+### Geometry and accessibility evidence
+
+At 900px viewport height, synthetic first-run comfortable layout produced:
+
+| Width | First row top (CSS px) | Complete rows within viewport | Document width |
+| ----- | ---------------------- | ----------------------------- | -------------- |
+| 320   | 317                    | 9                             | 320            |
+| 390   | 281                    | 9                             | 390            |
+| 1024  | 256                    | 11                            | 1024           |
+| 1440  | 236                    | 11                            | 1440           |
+
+These are measured layout properties, not time-saved or cognitive-load results. Baseline narrow screenshots show only the beginning of the first message near the viewport bottom. Checked flows cover named/titled rail destinations, keyboard summary activation, labeled filters, native modal containment, Escape/close/destination focus restoration, reduced-motion computed transitions, density, selected-only pane, dialog fallback, search and analytical routes. Rendered solid-text contrast checks passed in the exercised states; this is not full WCAG certification. Native title tooltips do not replace accessible names. Screen-reader, other engines/platforms and owner preference testing remain open.
+
+### Failures found and resolved
+
+- Background disclosure consumed Escape while a message modal was active: background handlers now defer to the active modal.
+- A legacy fixed main width left unused space after rail collapse: sidebar and main sizing now use one variable, and browser tests compare actual row width.
+- Legacy mobile nav selectors hid drawer text: explicit simplified navigation rules retain labels.
+- Browser helpers needed to wait for the lazy-mounted app after reload before opening contextual controls.
+- Overlapping development/production runs shared trace output and caused ENOENT during cleanup. That failed run is not counted as passing; preview-runs is now separate, and final suites ran sequentially.
+- Playwright's default screenshot cropped actual browser zoom; the final zoom screenshot uses CDP's full visible-surface capture. The earlier before-zoom image is cropped and is not a complete comparison surface; the four normal-width before/after pairs are complete viewport captures.
+
+### Artifacts and privacy boundary
+
+All screenshots contain synthetic fixtures only. Local, ignored artifacts: output/playwright/simplification-before-{320,390,1024,1440}.png and simplification-after-{320,390,1024,1440}.png; simplification-rail-{1024,1440}.png; simplification-drawer-{320,390}.png; simplification-filters-320.png; simplification-after-zoom200.png; simplification-layout-results.json; simplification-zoom-after.json. Normal screenshots are 900px tall; zoom capture represents the actual Chrome window viewport. Existing workspace-after-split-viewport.png shows the selected-only reader.
+
+Command logs (ignored .tmp): simplification-coverage-final.log, simplification-build.log, simplification-dev-passed.log, simplification-production-passed.log, simplification-final-assertions.log. Baseline hash comparison: simplification-baseline.json; per-task changes: simplification-changes.json. Temporary zoom extension has no declared permissions, operates only in its isolated local Chromium profile, and is not shipped. External requests were blocked for standalone visual/zoom inspection; Google behavior uses intercepted synthetic responses in integration tests.
+
+Original onboarding schema/mappings/wizard, OAuth service/token lifecycle/scopes, repositories, metadata validation, search selector, analytical calculations, routing hook, dependencies, Vite setup and brand tokens were not changed. Mail/tokens still stay in memory; only allowlisted UI preferences persist. Automated Google checks retain denied/missing-scope/cancelled/401 and no-write coverage; service unit tests retain 403/429/5xx/expiry/retry cases. No new claim about real token revocation or mailbox reliability is made by this UI milestone.
+
+Known trade-offs: filters and source diagnostics require an explicit disclosure; row badges now live in details; Overview and Analytics URLs share Insights. No full-body reader, sending, caching, cross-device UI preferences or new product feature is implemented. [Change report](SIMPLIFICATION_CHANGE_REPORT.md), [audit](../design/UX_SIMPLIFICATION_AUDIT.md), [learning notes](../learning/UX_SIMPLIFICATION_CONCEPTS.md).

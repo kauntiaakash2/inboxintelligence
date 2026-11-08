@@ -15,6 +15,7 @@ async function start(fetcher: typeof fetch) {
   const user = userEvent.setup()
   const rendered = render(<App authorization={authorization} />)
   await screen.findByText('Demo processing complete')
+  document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open = true
   expect(fetcher).not.toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: 'Connect Gmail' }))
   await user.click(
@@ -135,6 +136,8 @@ describe('mock/live source lifecycle', () => {
     fetcher.mockResolvedValue(jsonResponse({ error: 'private' }, 401))
     await user.click(screen.getByRole('button', { name: 'Refresh Gmail' }))
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     expect(screen.getByRole('alert')).toHaveTextContent(
       'expired or was revoked',
     )
@@ -154,6 +157,8 @@ describe('mock/live source lifecycle', () => {
       screen.getByRole('button', { name: 'Disconnect Gmail / use mock' }),
     )
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     await act(async () => {
       resolve(jsonResponse({ messages: [{ id: 'late' }] }))
       await Promise.resolve()
@@ -174,6 +179,8 @@ describe('mock/live source lifecycle', () => {
     const user = userEvent.setup()
     render(<App authorization={authorization} />)
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     await user.click(screen.getByRole('button', { name: 'Connect Gmail' }))
     await user.click(
       await screen.findByRole('button', { name: 'Authorize Gmail' }),

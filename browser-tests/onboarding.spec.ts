@@ -1,3 +1,4 @@
+import { navigation, source, filters } from './fixtures/workspaceControls'
 import { expect, test } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { mockGoogle } from './fixtures/google'
@@ -12,10 +13,12 @@ for (const viewport of [
     await page.setViewportSize(viewport)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.route('https://**/*', (route) => route.abort())
-    await page.goto('/')
-    await expect(page.getByText('Demo processing complete')).toBeVisible()
+    await page.goto('/app')
     await expect(
-      page.getByRole('button', { name: 'Connect Gmail' }),
+      page.locator('.app-shell[data-load-status=ready]'),
+    ).toBeVisible()
+    await expect(
+      (await source(page)).getByRole('button', { name: 'Connect Gmail' }),
     ).toBeEnabled()
     expect(
       await page.evaluate(
@@ -85,9 +88,14 @@ for (const viewport of [
     })
     await save.focus()
     await page.keyboard.press('Enter')
+    await (
+      await navigation(page)
+    )
+      .getByRole('button', { name: 'Settings', exact: true })
+      .click()
     await expect(
-      page.getByRole('heading', { name: 'Your focus', exact: true }),
-    ).toBeVisible()
+      page.getByRole('region', { name: 'Personalization settings' }),
+    ).toContainText('Finance')
     const stored = await page.evaluate(
       (storageKey) => JSON.parse(localStorage.getItem(storageKey) ?? 'null'),
       key,
@@ -100,19 +108,34 @@ for (const viewport of [
       enabledCategories: ['Finance'],
     })
     await page.reload()
+    await (
+      await navigation(page)
+    )
+      .getByRole('button', { name: 'Settings', exact: true })
+      .click()
     await expect(
-      page.getByRole('heading', { name: 'Your focus', exact: true }),
-    ).toBeVisible()
+      page.getByRole('region', { name: 'Personalization settings' }),
+    ).toContainText('Finance')
     await expect(
       page.getByRole('region', { name: 'Personalized setup' }),
     ).toHaveCount(0)
-    await page
+    await (
+      await navigation(page)
+    )
       .getByRole('button', { name: 'Inbox explorer', exact: true })
       .click()
     await expect(page.getByText('96 messages', { exact: true })).toBeVisible()
-    await page.getByLabel('Category', { exact: true }).selectOption('Education')
+    await (
+      await filters(page)
+    )
+      .getByLabel('Category', { exact: true })
+      .selectOption('Education')
     await expect(page.getByText('12 messages', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Settings', exact: true }).click()
+    await (
+      await navigation(page)
+    )
+      .getByRole('button', { name: 'Settings', exact: true })
+      .click()
     await page.getByRole('button', { name: 'Clear preferences' }).click()
     expect(
       await page.evaluate(
@@ -133,9 +156,11 @@ test('skip persists without forcing a profile; no Google requests on reload', as
     external.push(new URL(route.request().url()).origin)
     await route.abort()
   })
-  await page.goto('/')
+  await page.goto('/app')
   await page.getByRole('button', { name: 'Skip setup', exact: true }).click()
-  await expect(page.getByText(/Setup skipped/)).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Skip setup', exact: true }),
+  ).toHaveCount(0)
   await page.reload()
   await expect(
     page.getByRole('button', { name: 'Skip setup', exact: true }),
@@ -165,12 +190,16 @@ test('invalid storage is ignored safely and reset preserves unrelated values', a
     localStorage.setItem('unrelated-setting', 'keep')
   }, key)
   await page.route('https://**/*', (route) => route.abort())
-  await page.goto('/')
-  await expect(page.getByText('Demo processing complete')).toBeVisible()
+  await page.goto('/app')
+  await expect(page.locator('.app-shell[data-load-status=ready]')).toBeVisible()
   await expect(page.getByText(/invalid or unsupported/)).not.toContainText(
     'synthetic-private-data',
   )
-  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click()
   await page.getByRole('button', { name: 'Clear preferences' }).click()
   expect(
     await page.evaluate(
@@ -194,8 +223,8 @@ test('blocked storage leaves setup and dashboard usable with honest notices', as
     }),
   )
   await page.route('https://**/*', (route) => route.abort())
-  await page.goto('/')
-  await expect(page.getByText('Demo processing complete')).toBeVisible()
+  await page.goto('/app')
+  await expect(page.locator('.app-shell[data-load-status=ready]')).toBeVisible()
   await expect(page.getByText(/could not be read/)).toBeVisible()
   await page.getByRole('button', { name: 'Set up your view' }).click()
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
@@ -205,17 +234,25 @@ test('blocked storage leaves setup and dashboard usable with honest notices', as
     .click()
   await expect(page.getByText(/Applied for this tab/)).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'Connect Gmail' }),
+    (await source(page)).getByRole('button', { name: 'Connect Gmail' }),
   ).toBeEnabled()
 })
 test('saving and resetting preferences preserve Gmail state and request counts', async ({
   page,
 }) => {
   const { requests, writes } = await mockGoogle(page)
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Connect Gmail' }).click()
+  await page.goto('/app')
+  await (
+    await source(page)
+  )
+    .getByRole('button', { name: 'Connect Gmail' })
+    .click()
   await page.getByRole('button', { name: 'Authorize Gmail' }).click()
-  await expect(page.getByText('Gmail sample processing complete')).toBeVisible()
+  await expect(
+    page.locator(
+      '.app-shell[data-load-status=ready][data-retained-live-message-count="2"]',
+    ),
+  ).toBeVisible()
   const baseline = requests.length
   await page.getByRole('button', { name: 'Set up your view' }).click()
   await page.getByLabel('Student', { exact: true }).check()
@@ -236,17 +273,25 @@ test('saving and resetting preferences preserve Gmail state and request counts',
   expect(stored).not.toMatch(
     /browser-test-token|sender@example.test|Interview invitation|recent|older/,
   )
-  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await (
+    await navigation(page)
+  )
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click()
   await page.getByRole('button', { name: 'Clear preferences' }).click()
   await expect(
-    page.getByRole('button', { name: 'Disconnect Gmail / use mock' }),
+    (await source(page)).getByRole('button', {
+      name: 'Disconnect Gmail / use mock',
+    }),
   ).toBeEnabled()
   await expect(page.locator('.app-shell')).toHaveAttribute(
     'data-retained-live-message-count',
     '2',
   )
   expect(requests).toHaveLength(baseline)
-  await page
+  await (
+    await source(page)
+  )
     .getByRole('button', { name: 'Disconnect Gmail / use mock' })
     .click()
   await expect(page.locator('.app-shell')).toHaveAttribute(
@@ -254,7 +299,7 @@ test('saving and resetting preferences preserve Gmail state and request counts',
     '0',
   )
   await expect(
-    page.getByRole('button', { name: 'Connect Gmail' }),
+    (await source(page)).getByRole('button', { name: 'Connect Gmail' }),
   ).toBeEnabled()
   expect(writes).toEqual([])
 })

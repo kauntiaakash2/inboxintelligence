@@ -24,6 +24,8 @@ describe('optional first-run and returning setup', () => {
   it('keeps the dashboard and connection available without an automatic storage write', async () => {
     render(<App />)
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     expect(
       screen.getByRole('button', { name: 'Set up your view' }),
     ).toBeEnabled()
@@ -43,7 +45,10 @@ describe('optional first-run and returning setup', () => {
     for (const checkbox of screen.getAllByRole('checkbox'))
       await user.click(checkbox)
     await finish(user)
-    expect(screen.getByText(/All focus categories are off/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    expect(
+      screen.getByText('Default view; no categories emphasized'),
+    ).toBeInTheDocument()
     expect(
       JSON.parse(localStorage.getItem(PREFERENCE_STORAGE_KEY)!),
     ).toMatchObject({
@@ -79,14 +84,16 @@ describe('optional first-run and returning setup', () => {
     unmount()
     render(<App />)
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
     expect(
-      screen.getByRole('heading', { name: 'Your focus' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('list', { name: 'Enabled focus categories' }),
+      screen.getByRole('region', { name: 'Personalization settings' }),
     ).toHaveTextContent('Finance')
     await user.click(screen.getByRole('button', { name: /Inbox explorer/ }))
     expect(screen.getByText('96 messages')).toBeInTheDocument()
+    document.querySelector<HTMLDetailsElement>('.filter-disclosure')!.open =
+      true
     await user.selectOptions(screen.getByLabelText('Category'), 'Education')
     expect(screen.getByText('12 messages')).toBeInTheDocument()
   })
@@ -96,7 +103,9 @@ describe('optional first-run and returning setup', () => {
       const user = userEvent.setup()
       const { unmount } = render(<App />)
       await user.click(screen.getByRole('button', { name: 'Skip setup' }))
-      expect(screen.getByText(/Setup skipped/)).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Skip setup' }),
+      ).not.toBeInTheDocument()
       unmount()
       render(<App />)
       expect(
@@ -155,6 +164,8 @@ describe('optional first-run and returning setup', () => {
     )
     render(<App />)
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     expect(screen.getByText(/invalid or unsupported/)).not.toHaveTextContent(
       'synthetic-private-value',
     )
@@ -167,6 +178,8 @@ describe('optional first-run and returning setup', () => {
     const user = userEvent.setup()
     render(<App preferenceStore={store} />)
     await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     expect(screen.getByText(/could not be read/)).not.toHaveTextContent(
       'private failure',
     )
@@ -196,6 +209,8 @@ describe('optional first-run and returning setup', () => {
       const user = userEvent.setup()
       render(<App authorization={auth} />)
       await screen.findByText('Demo processing complete')
+      document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+        true
       await user.click(screen.getByRole('button', { name: 'Connect Gmail' }))
       await user.click(
         await screen.findByRole('button', { name: 'Authorize Gmail' }),
@@ -222,9 +237,12 @@ describe('optional first-run and returning setup', () => {
         screen.getByRole('button', { name: 'Disconnect Gmail / use mock' }),
       )
       await screen.findByText('Demo processing complete')
+      document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+        true
+      await user.click(screen.getByRole('button', { name: 'Settings' }))
       expect(
-        screen.getByRole('heading', { name: 'Your focus' }),
-      ).toBeInTheDocument()
+        screen.getByRole('region', { name: 'Personalization settings' }),
+      ).toHaveTextContent('Freelancer/business owner')
       expect(document.querySelector('.app-shell')).toHaveAttribute(
         'data-retained-live-message-count',
         '0',

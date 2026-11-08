@@ -1,0 +1,40 @@
+/* Independently selected approximate reference-inspired values, not extracted template tokens. */
+:root {
+  color-scheme: dark;
+  --page-bg: #080808;
+  --surface: #141414;
+  --surface-raised: #1b1b1b;
+  --surface-hover: #222222;
+  --text-primary: #f8f8f8;
+  --text-secondary: #a3a3a3;
+  --border-subtle: #292929;
+  --border-control: #707070;
+  --brand: #a3ff3f;
+  --brand-hover: #baff74;
+  --brand-active: #8ee12f;
+  --on-brand: #080808;
+  --selected-bg: #202c14;
+  --focus-ring: #a3ff3f;
+  --warning: #f5c56b;
+  --warning-bg: #292216;
+  --error: #ffb4ab;
+  --error-bg: #311b1b;
+  --success: #8eddb6;
+  --success-bg: #16291f;
+  --info: #98d8cf;
+  --info-bg: #182826;
+  --disabled-text: #a3a3a3;
+  --disabled-bg: #1b1b1b;
+  --chart-0: #a3ff3f;
+  --chart-1: #75dac9;
+  --chart-2: #f5c56b;
+  --chart-3: #c4c4c4;
+  --chart-4: #e6a4b4;
+  --shadow: #00000066;
+  --scrim: #000000b8;
+  /* Compatibility names keep existing component selectors stable. */
+  --green: var(--brand);
+  --muted: var(--text-secondary);
+  --border: var(--border-subtle);
+  --accent: var(--surface-raised);
+}

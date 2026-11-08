@@ -1,8 +1,13 @@
-import { expect, test } from '@playwright/test'
+import { navigation, source } from './fixtures/workspaceControls'
+import { expect, test, type Page } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { mockGoogle } from './fixtures/google'
 async function connect(page: Page) {
-  await page.getByRole('button', { name: 'Connect Gmail' }).click()
+  await (
+    await source(page)
+  )
+    .getByRole('button', { name: 'Connect Gmail' })
+    .click()
   await page.getByRole('button', { name: 'Authorize Gmail' }).click()
 }
 for (const viewport of [
@@ -15,8 +20,10 @@ for (const viewport of [
     await mkdir('output/playwright', { recursive: true })
     await page.setViewportSize(viewport)
     const { requests, writes } = await mockGoogle(page)
-    await page.goto('/')
-    await expect(page.getByText('Demo processing complete')).toBeVisible()
+    await page.goto('/app')
+    await expect(
+      page.locator('.app-shell[data-load-status=ready]'),
+    ).toBeVisible()
     expect(requests).toHaveLength(0)
     expect(
       await page
@@ -25,7 +32,9 @@ for (const viewport of [
     ).toBe(0)
     await connect(page)
     await expect(
-      page.getByText('Gmail sample processing complete'),
+      page.locator(
+        '.app-shell[data-load-status=ready][data-retained-live-message-count="2"]',
+      ),
     ).toBeVisible()
     await expect(
       page.getByText(/2 of 3 selected messages loaded; 1 failed/),
@@ -42,7 +51,11 @@ for (const viewport of [
       path: `output/playwright/phase2-live-${viewport.width}.png`,
       fullPage: true,
     })
-    await page.getByRole('button', { name: /Inbox explorer/ }).click()
+    await (
+      await navigation(page)
+    )
+      .getByRole('button', { name: /Inbox explorer/, exact: true })
+      .click()
     await page.locator('.message-row').first().click()
     await expect(page.getByRole('dialog')).toContainText(
       'Message bodies and attachments are not retrieved',
@@ -56,7 +69,9 @@ for (const viewport of [
       '2',
     )
     await expect(
-      page.getByRole('region', { name: 'Gmail aggregate diagnostics' }),
+      (await source(page)).getByRole('region', {
+        name: 'Gmail aggregate diagnostics',
+      }),
     ).toContainText('API request attempts5')
     expect(
       await page.evaluate(() => ({
@@ -64,7 +79,9 @@ for (const viewport of [
         session: sessionStorage.length,
       })),
     ).toEqual({ local: 0, session: 0 })
-    await page
+    await (
+      await source(page)
+    )
       .getByRole('button', { name: 'Disconnect Gmail / use mock' })
       .click()
     await expect(page.getByText('96 messages', { exact: true })).toBeVisible()
@@ -79,7 +96,9 @@ for (const viewport of [
       '0',
     )
     await expect(
-      page.getByRole('region', { name: 'Gmail aggregate diagnostics' }),
+      (await source(page)).getByRole('region', {
+        name: 'Gmail aggregate diagnostics',
+      }),
     ).not.toBeVisible()
     expect(writes).toEqual([])
     expect(
@@ -91,7 +110,15 @@ for (const viewport of [
       expect(url.searchParams.get('includeSpamTrash')).toBe('false')
     const count = requests.length
     await page.reload()
-    await expect(page.getByText('Demo processing complete')).toBeVisible()
+    await expect(page).toHaveURL('/app/inbox')
+    await expect(page.getByText('96 messages', { exact: true })).toBeVisible()
+    await expect(
+      (await source(page)).getByRole('button', { name: 'Connect Gmail' }),
+    ).toBeEnabled()
+    await expect(page.locator('.app-shell')).toHaveAttribute(
+      'data-retained-live-message-count',
+      '0',
+    )
     expect(requests).toHaveLength(count)
   })
 }
@@ -103,11 +130,15 @@ for (const outcome of [
 ] as const) {
   test(`mocked ${outcome} keeps or restores mock mode`, async ({ page }) => {
     const { requests, writes } = await mockGoogle(page, outcome)
-    await page.goto('/')
-    await expect(page.getByText('Demo processing complete')).toBeVisible()
+    await page.goto('/app')
+    await expect(
+      page.locator('.app-shell[data-load-status=ready]'),
+    ).toBeVisible()
     await connect(page)
     await expect(page.getByRole('alert')).toBeVisible()
-    await expect(page.getByText('Demo processing complete')).toBeVisible()
+    await expect(
+      page.locator('.app-shell[data-load-status=ready]'),
+    ).toBeVisible()
     await expect(page.getByRole('alert')).not.toContainText('private error')
     expect(writes).toEqual([])
     if (outcome !== 'unauthorized') expect(requests).toHaveLength(0)

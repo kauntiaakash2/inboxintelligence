@@ -1,45 +1,68 @@
-# Design system and interaction contract
+# Inbox Intelligence — shared dark design system
 
-## Direction and evidence contract
+## Direction and scope
 
-Purpose: help a personal Gmail user scan priorities and explore reasons, starting with synthetic data. Tone: calm, precise and approachable. Reference: the owner's requested overview/inbox/analytics/settings workflows, not a marketing page. Memorable detail: muted green editorial dashboard, small evidence labels and transparent explanations. Primary action: explore priority messages; detail exposes the reason. Hierarchy: source disclosure → counts → categories and priority messages → sender/processing context.
+Black/charcoal surfaces, off-white content and a restrained lime accent unify the public landing page, dashboard and optional onboarding. The public site uses expressive typography, whitespace and subtle glows; the workspace keeps dense, functional panels and semantic status colors. See [Clario adaptation](CLARIO_ADAPTATION.md) for observed reference, independent implementation and licensing provenance. These are approximate reference-inspired values, not extracted template tokens. Light/dark switching is not implemented; the current system is consistently dark.
 
-Target viewports: desktop 1440×1000 and mobile 390×844. Wide layouts show fixed sidebar and two-column panels; narrow layouts show sticky icon navigation and one column. Long subjects truncate only in lists; full detail wraps. Source truth is always visible in the banner and header. No remote visual assets or fonts are loaded.
+## Semantic tokens
 
-## Typography and tokens
+Source of truth: src/styles/tokens.css. src/styles/index.css imports it through the existing Tailwind Vite integration and maps page/panel/ink/brand into @theme utilities. Components use CSS properties rather than scattered hex values. Existing --green/--muted/--border/--accent names are compatibility aliases, not separate palettes.
 
-Local font stack Inter when installed, then Segoe UI/system-ui. No CDN dependency. Heading sizes scale 23–33px; section headings 14–15px; body/metadata deliberately compact. Core CSS tokens in src/styles/index.css: text #253a35, background #f7f9f7, primary green #205c4b, muted #67766f, border #e3e9e4, white surface, pale green accent. Supplemental amber indicates priority/demo, never color alone. Category palettes use five muted tones with labels and counts; repeated colors mean the legend/labels are essential. Dynamic donut segments derive from actual category counts.
+| Role                     | CSS token / value                                        | Usage                                                                |
+| ------------------------ | -------------------------------------------------------- | -------------------------------------------------------------------- |
+| Canvas                   | --page-bg #080808                                        | Public and workspace background                                      |
+| Panel                    | --surface #141414                                        | Cards, sidebar, dialogs, connection/setup panels                     |
+| Elevated / hover         | --surface-raised #1B1B1B / --surface-hover #222222       | Secondary surfaces and hover feedback                                |
+| Primary / secondary text | --text-primary #F8F8F8 / --text-secondary #A3A3A3        | Content / metadata; do not lower opacity for readable text           |
+| Decorative border        | --border-subtle #292929                                  | Nonessential panel dividers                                          |
+| Control border           | --border-control #707070                                 | Inputs, toggles and buttons needing a distinguishable boundary       |
+| Primary action           | --brand #A3FF3F / --on-brand #080808                     | Near-black text on lime; never white text on lime                    |
+| Action hover / press     | --brand-hover #BAFF74 / --brand-active #8EE12F           | Primary hover/active feedback                                        |
+| Selection                | --selected-bg #202C14                                    | Active navigation/checked choices with text and native checked state |
+| Focus                    | --focus-ring #A3FF3F                                     | Visible offset outline independent of hover                          |
+| Warning                  | --warning #F5C56B / --warning-bg #292216                 | High priority/demo/notice states, with text labels                   |
+| Error                    | --error #FFB4AB / --error-bg #311B1B                     | Safe failure text; not brand accent                                  |
+| Success                  | --success #8EDDB6 / --success-bg #16291F                 | Confirmed operational success                                        |
+| Information              | --info #98D8CF / --info-bg #182826                       | Medium-priority/supporting state                                     |
+| Disabled                 | --disabled-text #A3A3A3 / --disabled-bg #1B1B1B          | Disabled semantic controls with no opacity fade                      |
+| Charts                   | --chart-0…4: #A3FF3F, #75DAC9, #F5C56B, #C4C4C4, #E6A4B4 | Data palette; labels/counts remain the source of meaning             |
 
-Spacing uses a restrained 4/8/12/16/20/24/32 family with 18/22px panel adjustments. Panels have subtle 9px corners, thin borders and minimal shadows. No decorative imagery or gradients beyond the actual category chart.
+Lime is an action/focus cue; do not make every statistic/icon lime. Chart colors are reused across 11 categories, so text legends/counts are required. Adjacent chart colors do not establish category identity on their own. Borders used only to group decorative surfaces need not meet the control-boundary contract; real control boundaries use the brighter token.
 
-## Components
+## Typography, spacing and shape
 
-- Buttons: semantic button, clear action text, outlined primary utility style; disabled Gmail control states its future phase. Icon-only buttons have accessible names.
-- Navigation: labeled nav, aria-current on active view; narrow sidebar becomes horizontal icon controls retaining labels for assistive technology.
-- Inputs: labeled search and native category/priority selects; minimum 42px primary control height, visible focus rings. Do not replace native dropdown behavior unnecessarily.
-- Lists: full-row message button, sender initials, subject/snippet, date, unread dot plus accessible label, text category/priority and Gmail-style labels. Do not make unread state color-only.
-- Charts: CSS donut/bars with counts, legends and accessible text; trends describe the fixture's uniform daily counts. Chart numbers reconcile to loaded messages.
-- Dialog: native showModal, heading association, Escape and close button, focus containment and focus restoration to trigger.
+System-local Inter/Segoe UI/system-ui stack; no downloaded font or CDN. Public display scale clamps roughly 37–82px, tightly tracked with clear line breaks; public prose is 14–17px and 1.6–1.85 line height. Workspace headings retain the existing compact scale. Supporting labels may be smaller but must remain high contrast; important dashboard metadata/category values have been lifted to 12px. Compact-preview annotations are illustrative and labeled synthetic.
 
-## Content states
+Retain workspace spacing (4/8/12/16/20/24/32 with existing panel adjustments). Public sections use larger 55–100px vertical rhythm and max-width containers. Panel corners are 6–12px; the final public CTA uses 16px. Decorative gradients/glows appear only on marketing surfaces; dashboard loading uses existing indeterminate/progress feedback, never fake percentages.
 
-| State      | Trigger / visible feedback / safe action                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------------------------ |
-| Loading    | Local load starts; preparing status and disabled refresh; wait for completion                                |
-| Empty      | Filter result is empty; no-results explanation; clear filters                                                |
-| Error      | Repository fails/invalid data; generic alert without payload; retry                                          |
-| Partial    | Not applicable to this all-or-error fixture load; future import must show indexed count and pending failures |
-| Success    | 96 classified messages and processing complete; explore messages or refresh                                  |
-| Permission | No permission request exists in mock mode; Gmail connection disabled with phase label                        |
+## Reused primitives and variants
 
-## Accessibility and responsive behavior
+- `.button`: outlined neutral utility control; `.setup-primary`: lime fill with on-brand text. Shared hover/press/focus/disabled behavior applies to anchors and native buttons. CTA links navigate; buttons perform local actions.
+- `.panel`, existing cards and connection/settings panels: neutral surfaces and subtle dividers. No duplicate generic Card abstraction is needed.
+- `.tag`, `.mock-pill`, priority labels: text plus status styling; source and priority never rely on hue alone.
+- Search/native select/fieldset inputs: visible labels and brighter boundaries; checked native controls keep familiar keyboard behavior.
+- `.nav-item.active`: selected background plus lime/text and aria-current. Dashboard navigation preserves component state while view URLs change.
+- StatusPanel and Gmail progress/errors: preserve existing semantic loading/empty/error contracts and safe messages. Initial route chunk loading uses a text status with a usable home link.
+- MessageDetail: existing native dialog, showModal, Escape/focus return and text-only rendering; dark surface/scrim.
+- FAQ: native details/summary; mobile navigation is an aria-expanded disclosure, not a custom menu widget.
+- Tooltips: no new tooltip responsibility was introduced; avoid abstractions without a current use.
 
-Visible 3px amber focus ring; semantic buttons/labels and status/alert roles; native dialog focus; priority conveyed with words; reduced motion disables transitions/spinner. Check keyboard navigation, screen reader names, contrast and touch controls in rendered browser evidence. Compact supporting text warrants user testing at zoom; current checks are not a formal WCAG certification. Breakpoints: 1150px compact panels, 850px icon rail, 560px mobile top nav and 2-column stats. Analytics/settings stack early to preserve legibility. Never hide essential source disclosure on mobile.
+## Optional onboarding
 
-Dark mode is planned, not implemented. Add semantic theme tokens and independently test chart/text contrast rather than inverting colors. Current preference follows a deliberate light-only design.
+Existing Profile → Goals → Review logic, optional fields, skip/back/continue, Settings edits/restart/reset and preference schema are preserved. Native checked choices use the selected background/brand outline; current step has visible text/number with aria-current; primary confirmation uses dark-on-lime. No modal overlay, new data collection, classification changes or permission request was introduced by styling.
 
-## Optional setup components — Phase 3A
+## Accessibility and responsive contract
 
-Use the existing white panel, muted green tokens, typography and amber focus ring. Invitation/summary stays compact; the expanded form is inline below the always-available Gmail controls. `.setup-choices` uses two columns on wide screens and one at the existing mobile breakpoint; native label rows are at least 48px tall. `.setup-progress` displays three numbered, text-labeled steps and aria-current; do not convey completion by color alone. No fabricated percentage or entrance animation is used. Existing reduced-motion rules apply.
+Normal text token pairs must meet 4.5:1; meaningful control boundaries/focus/chart-to-surface contrast must meet 3:1. Automated token and rendered-solid-background checks enforce the tested scope; gradient endpoints use the same dark surface range and need visual review. See [WCAG contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html). Do not infer full WCAG conformance from contrast alone.
 
-Use labeled native radio/checkbox controls, fieldsets with legends, semantic submit/back/skip buttons, focused step headings and status notices. No custom keyboard widget or modal focus trap is needed for this nonmodal section. `.focus-tags` communicate enabled emphasis without hiding other categories. `.preference-settings` spans the settings grid and wraps its controls. Rendered Chromium checks cover 1440×1000 and 390×844, reduced motion, keyboard interactions and overflow. Formal screen-reader/zoom/contrast conformance remains a separate review. Existing Phase 1 permission/partial-state examples above are historical; Phase 2 supplies actual authorization and partial sample controls.
+Skip links, visible focus, semantic links/buttons, fieldset/legend, native dialog and text/status labels remain required. Landing navigation collapses below 700px; features move 3→2→1 columns; preview panels stack on mobile. Workspace navigation switches at 768px and optional split reading at 1100px. Target checks include 1440, 1024, 390 and 320 widths, native keyboard actions and no horizontal overflow. Reduced motion disables transitions/animation; all content remains visible. No autoplay, smooth-scroll engine or animated first-load delay exists. Actual Chromium 200% browser zoom is exercised separately; screen-reader and non-Chromium checks remain open.
+
+## Simplified email workspace layer
+
+Application-only styles live in src/styles/workspace.css; the public Clario-inspired composition and semantic palette remain unchanged. Expanded sidebar is 208px; the explicit collapsed rail is 64px. The main width follows the same CSS variable, overriding legacy fixed widths. Below 768px, navigation is a native modal drawer (up to 280px / 86vw); labels remain visible in the drawer. Do not add a parallel top navigation.
+
+One toolbar holds the view title, refresh and contextual filters. Native details/summary is appropriate for a small form disclosure, not an ARIA menu: Category and Priority stay ordinary labeled selects. Escape/outside pointer dismisses; Escape restores summary focus. Background disclosures must defer Escape to an active modal. The source disclosure contains the sole connection control and aggregate diagnostics; live coverage stays visible. Settings owns display density/layout/default controls.
+
+Message rows use a subtle bottom separator, read dot plus unread weight, sender, subject/preview (category fallback) and date. No per-row badge stack or card border. Comfortable minimum height is 56px desktop / 64px mobile; Compact is 44px / 54px. Natural content can increase these dimensions. All classification details and Gmail labels remain in the existing reader. The optional split pane appears only on selection at >=1100px; narrow screens use the native dialog.
+
+Use 160ms width/margin transitions and a restrained disclosure/drawer appearance. Reduced motion disables workspace animation and transitions. No scrolling reveal, floating element or list entrance effect. Preserve visible semantic focus rings and existing contrast tokens. Native title tooltips complement icon accessible names; they are not the only accessible label. Screenshots, contrast checks and zoom workflows are evidence, not a full accessibility certification or owner design acceptance.

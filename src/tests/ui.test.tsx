@@ -7,21 +7,25 @@ describe('important UI workflows', () => {
   it('explores messages, combines filters, and recovers from no results', async () => {
     const user = userEvent.setup()
     render(<App />)
-    expect(
-      await screen.findByText('Demo processing complete'),
-    ).toBeInTheDocument()
+    await screen.findByText('Demo processing complete')
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
     await user.click(screen.getByRole('button', { name: /Inbox explorer/ }))
     await user.type(
       screen.getByRole('textbox', { name: 'Search messages' }),
       'interview',
     )
     expect(screen.getByText('6 messages')).toBeInTheDocument()
+    document.querySelector<HTMLDetailsElement>('.filter-disclosure')!.open =
+      true
     await user.selectOptions(screen.getByLabelText('Category'), 'Orders')
     expect(
       screen.getByRole('heading', { name: 'No messages found' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
     expect(screen.getByText('96 messages')).toBeInTheDocument()
+    document.querySelector<HTMLDetailsElement>('.filter-disclosure')!.open =
+      true
     await user.selectOptions(screen.getByLabelText('Priority'), 'High')
     expect(screen.getByText('30 messages')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Refresh demo' }))
@@ -31,7 +35,9 @@ describe('important UI workflows', () => {
     const user = userEvent.setup()
     render(<App />)
     await screen.findByText('Demo processing complete')
-    await user.click(screen.getByRole('button', { name: 'Analytics' }))
+    document.querySelector<HTMLDetailsElement>('.source-disclosure')!.open =
+      true
+    await user.click(screen.getByRole('button', { name: 'Insights' }))
     expect(
       screen.getByRole('heading', { name: 'Inbox rhythm' }),
     ).toBeInTheDocument()

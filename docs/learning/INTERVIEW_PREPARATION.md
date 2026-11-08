@@ -44,3 +44,36 @@ Practice each answer with the actual relevant function or ADR. Do not claim prod
 25. **How do you evaluate optional onboarding responsibly?** Use synthetic tests for correctness and separately consented usability/outcome evidence. Future opt-in aggregate completion/skip metrics need explicit denominators; skipping is legitimate and not failure. No profile/goal values need enter telemetry, and no activation or benefit is claimed from test results.
 
 Code walkthrough and alternatives: [Phase 3A concepts](PHASE3A_CONCEPTS.md).
+
+## Unified design — five implementation questions
+
+26. **Why semantic tokens instead of reusable hex constants?** Intent-based names distinguish actions, secondary text, warning states and control boundaries. CSS variables and Tailwind aliases share one source; the same change updates landing/dashboard/onboarding without rewriting business logic.
+27. **Why near-black text on lime?** Brand preference does not guarantee contrast. Normal text needs 4.5:1; near-black/lime passes the tested pair while white/lime does not. Real controls use brighter boundary tokens and visible focus, with words/checked state rather than hue alone.
+28. **How does the public preview avoid private mail?** It accepts no connected state and uses only bundled synthetic fixtures with pure classify/summarize. The public entry does not mount auth/mailbox hooks. Browser tests navigate from intercepted live state to / and assert private fixture content is absent.
+29. **Why use the History API instead of a routing library?** Four fixed workspace paths need only mapping, pushState and popstate while retaining the mounted app. A framework becomes useful for a larger nested/data-routing graph. Trade-offs are explicit host fallback, recovery/status handling and no URL filter serialization.
+30. **How did you preserve onboarding while redesigning it?** Domain preferences, mappings, priority sorting, hook, storage validation/schema and wizard logic have no diff. Existing tests remain and new styles consume shared tokens. Browser checks exercise skip/return/reset/restart, keyboard behavior and saved preferences while fake Gmail stays connected.
+
+Licensing follow-up: a free reference is not unrestricted asset ownership; document actual terms and independent provenance. See [design lessons](DESIGN_SYSTEM_CONCEPTS.md) and [adaptation note](../design/CLARIO_ADAPTATION.md).
+
+## Email workspace and future capabilities
+
+31. **Why inbox-first?** It aligns default task entry with message finding/reading and makes analytics contextual. Published/official patterns inform the hypothesis, while only a comparative usability study can establish benefit for our users. Overview remains selectable.
+32. **How do qualitative and quantitative findings differ?** Observations/interviews explain a problem; success/time/error counts describe it under a defined protocol. Anecdotes and tiny samples do not establish population preference or causation.
+33. **How would you test this design with users?** Counterbalance baseline/revised synthetic builds, use equivalent tasks, record unaided success/effort/errors/privacy comprehension and retain failures; recruit voluntarily and report no results before collection.
+34. **Why isn't a message body just payload.body.data?** MIME can nest mixed/alternative/related parts with charsets, encoded bytes and out-of-line references. A future adapter must validate bounds and choose the correct text, not concatenate attachments or duplicate alternatives.
+35. **How do message and thread IDs differ?** One identifies a Gmail message, the other a provider conversation; RFC Message-ID is another namespace. Subject alone is insufficient, and reading a full thread can widen sample coverage.
+36. **What is incremental authorization?** Request additional capability only when explicitly enabled and verify the granted scope/account; denial preserves existing functionality. The current app still requests only gmail.readonly.
+37. **How would safe HTML reading work?** Start with plain text; separately approve maintained sanitization, isolated rendering, strict resource blocking and explicit validated link/file handling. Neither React nor provider delivery makes raw HTML safe.
+38. **Why not automatically retry a failed send?** A timeout can occur after provider acceptance. An in-flight guard stops double clicks but does not guarantee server idempotency; show an unknown outcome and require reconciliation before deliberate retry.
+39. **Why can't we reuse native Gemini summaries through Gmail API?** Native Gmail UI features and account eligibility are separate from the consulted Message API contract, which exposes no such summary field. Our future model integration needs its own consent, quality, cost and evidence design.
+40. **What is email prompt injection?** Attacker-authored text can try to override model instructions or exfiltrate other data. Fix the approved input set, deny tool/action authority, validate outputs/evidence and evaluate adversarial cases; delimiters alone are insufficient.
+
+[Workspace concepts](EMAIL_WORKSPACE_CONCEPTS.md) connects these answers to actual code and clearly planned API/model designs.
+
+## Workspace simplification questions
+
+1. **Why disclose filters instead of deleting them?** Progressive disclosure removes repeated choices from the resting view while retaining the same selector function; an active-filter indication and labeled form maintain discoverability. It adds one interaction, which needs user evaluation.
+2. **Why use native dialog for mobile navigation?** It provides browser modal/inert/focus containment. React owns open state; effect cleanup closes it and restores focus. Escape/backdrop/destination paths still need real-browser tests.
+3. **How can a collapsed sidebar fail despite a passing click test?** A CSS class can change while legacy fixed main width leaves a blank area. Our regression compares actual row width before/after and checks reload state.
+4. **How do you migrate UI settings safely?** Validate an exact legacy allowlist, retain old enum choices, add a safe sidebar default in memory, and write only on explicit save. Never expand the onboarding record or serialize private runtime state.
+5. **What did tests fail to prove?** Chromium checks demonstrate specific navigation, search, focus, contrast and source-state behavior with synthetic fixtures. They do not prove productivity, screen-reader compatibility, cross-browser support or owner visual acceptance.

@@ -42,3 +42,30 @@ The format follows Keep a Changelog conventions; versions follow semantic versio
 
 - No Google authorization, Gmail API, IndexedDB persistence, user correction workflow or external AI integration.
 - Simulated retrieval decisions are not measured API savings. Verification and dependency audit findings are recorded separately.
+
+## Unified design milestone — pending review
+
+### Added
+
+- Original Clario-inspired public landing page with synthetic product preview, honest capability/privacy/FAQ content and functional app links.
+- Shared black/charcoal/off-white/lime semantic tokens, brighter control boundaries and dark dashboard/onboarding styling.
+- Fixed workspace view URLs with Back/Forward, lazy app loading, skip links and unknown-route recovery.
+- Landing/routing/privacy/contrast tests and a production-preview Chromium configuration; no new dependency.
+
+### Preserved
+
+- Verified Phase 3A declarations, mappings, display-priority algorithms, validation, preference format and persistence.
+- Existing read-only Gmail authorization, adapters, mock/live switching, classification, filters, analytics and instrumentation.
+
+## Email-workspace revision — pending review
+
+### Added
+
+- Inbox-first default with explicit Overview route, global local search, familiar message rows and unchanged read/unread state.
+- Independent density/layout/default-view enums and reset, plus optional wide reading pane for already-loaded content with narrow dialog fallback.
+- Sourced email UX evidence, an unexecuted comparative study protocol, and separate full-reader/send/AI architecture plans.
+- Display/schema/keyboard/default-route and mocked Gmail pane-preservation tests; synthetic before/after artifacts.
+
+### Preserved
+
+- Uncommitted Clario landing/design work, Phase 3A schema/mappings/onboarding, read-only Gmail METADATA retrieval, existing source/session protection and no live writes/model transfer.

@@ -29,3 +29,31 @@ The original numbered sync roadmap above is retained; **3A is a product-personal
 | Historical import / original Phase 3                                      | Phase 2 plus explicit email-cache retention/deletion decision | All discovery pages, resumable checkpoints and reconciliation as above                                                                                                                          | Still planned; preferences do not provide email persistence or synchronization                                                                          |
 
 Phase 3B should first validate whether this ordering helps before adding more profile labels. No background account operation, cloud profile database or external telemetry is implied.
+
+## Unified design checkpoint — after verified Phase 3A
+
+Shared dark identity and public landing/workspace routing are implemented and locally tested; this is a presentation/navigation milestone, not Phase 3B synchronization or learning. Dependency: verified 5ad1b62 onboarding baseline. Exit evidence: unit/component, dev/production Chromium, build, contrast and synthetic screenshots in ../quality/VERIFICATION.md. No commit/push/deployment is part of this checkpoint.
+
+Recommended next: owner visual/accessibility review, assistive-technology/zoom/non-Chromium checks and a lightweight consented usability study. Then agree Phase 3B preference portability/measurement scope. Before hosting, configure/review SPA fallback and security headers, legal/privacy readiness and OAuth origin eligibility. Historical import/IndexedDB require their separate retention/deletion decision; no feature status changes from visual presence alone.
+
+## Revised email-workspace sequence
+
+This sequence supersedes the suggested next-step priority while retaining the original sync phases as technical dependencies. Status is implementation scope; participant outcomes remain unmeasured.
+
+| Milestone                                    | Status / dependency                                                   | Exit and evidence gate                                                                                                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W0: inbox-first workspace                    | Implemented on preserved Phase 3A/Clario work                         | Search/rows/density/default/pane with no new Gmail retrieval; synthetic regression, browser, build and before/after artifacts                                          |
+| U1: formative comparative usability          | Proposed; owner-approved recruitment/materials                        | Execute EMAIL_UX_RESEARCH.md protocol; report anonymous observations, failures and uncertainty; fix serious keyboard/privacy-comprehension issues                      |
+| R1: on-demand plain-text reader              | Separate explicit implementation scope after W0 review                | Existing readonly scope, bounded FULL/MIME adapter, no attachments/HTML, session-only content, abort/source-race tests; manual body test requires later approval       |
+| R2: conversation and optional rich reading   | Planned; R1 and thread-ID/coverage/privacy design                     | Explicit thread expansion, chronology/quotation controls; sanitizer/isolation/network-block tests before optional HTML                                                 |
+| S1: compose/reply/forward prototype          | Planned; approved reader/addressing model                             | Synthetic-only compose/review/MIME validation; no live send until a separately approved incremental-scope/send milestone                                               |
+| S2: explicit send integration                | Planned; independent security/consent review                          | Human-reviewed immutable draft, gmail.send only when enabled, partial grants, no ambiguous automatic retry, fake transport tests; owner-approved manual recipient plan |
+| I1: opt-in single-message intelligence       | Planned; R1 + external provider/privacy/cost decision                 | Summary/action/deadline evidence, strict output validation, abstention, injection tests and independent evaluation; no default external transfer                       |
+| I2: thread summaries / bounded deep analysis | Planned; R2 + coverage/caching/evaluation decisions                   | Approved read set, source links, full/partial disclosure, budget/cancel controls and no model action authority                                                         |
+| Historical/incremental sync (original 3/4)   | Still planned; account-scoped retention/deletion and IndexedDB review | Resumable complete discovery/reconciliation; this UI and its preference keys do not implement caching                                                                  |
+
+Native Gmail Gemini is a separate Google product, not an inference endpoint provided by the Gmail REST API. Deployment, commercialization and multi-user gates remain unchanged. Recommended next implementation is R1 only after owner review and a clear scope; run U1 before claiming the workspace improves productivity. No research result, send permission or paid AI service is introduced by this roadmap.
+
+## Workspace simplification review gate
+
+Owner rejected the inbox-first composition. The current scoped revision consolidates navigation/Insights, adds a persistent rail and mobile drawer, and progressively discloses filters/source details without changing mail logic. Engineering verification and synthetic before/after artifacts precede owner review; visual acceptance remains pending. Next: owner walkthrough, then the unexecuted comparative usability protocol. Full-message retrieval remains a separately approved R1 milestone after this gate.

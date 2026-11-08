@@ -5,16 +5,18 @@ export function PersonalizationPanel({
   notice,
   onStart,
   onSkip,
+  compact = false,
 }: {
   preferences: UserPreferences | null
   notice: string
   onStart: () => void
   onSkip: () => void
+  compact?: boolean
 }) {
   const focus = enabledFocus(preferences)
   return (
     <section
-      className="panel personalization-summary"
+      className={`panel personalization-summary ${compact ? 'is-compact' : ''}`}
       aria-label="Dashboard personalization"
     >
       <div className="setup-header">
@@ -22,14 +24,22 @@ export function PersonalizationPanel({
           <h2>
             {preferences?.status === 'completed'
               ? 'Your focus'
-              : 'Make this view yours'}
+              : compact
+                ? 'Personalize'
+                : 'Make this view yours'}
           </h2>
           <p className="setup-help">
             {preferences?.status === 'completed'
-              ? `Based on your choices${preferences.profile ? ` · ${profileOptions.find((profile) => profile.id === preferences.profile)?.label}` : ''}. ${focus.length ? 'Rule-based high priority stays first; your categories reorder within each priority band.' : 'All focus categories are off; the default view stays active.'}`
+              ? compact && focus.length
+                ? 'Your declared focus. Rule priority stays first.'
+                : `Based on your choices${preferences.profile ? ` · ${profileOptions.find((profile) => profile.id === preferences.profile)?.label}` : ''}. ${focus.length ? 'Rule-based high priority stays first; your categories reorder within each priority band.' : 'All focus categories are off; the default view stays active.'}`
               : preferences?.status === 'skipped'
-                ? 'Setup skipped. The default dashboard is active; you can personalize it at any time.'
-                : 'Optional setup helps emphasize what matters to you. It never limits which messages are retrieved.'}
+                ? compact
+                  ? 'Setup skipped. Edit any time.'
+                  : 'Setup skipped. The default dashboard is active; you can personalize it at any time.'
+                : compact
+                  ? 'Optional. All messages stay available.'
+                  : 'Optional setup helps emphasize what matters to you. It never limits which messages are retrieved.'}
           </p>
         </div>
         <div className="setup-actions">

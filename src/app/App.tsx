@@ -1,22 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Activity,
-  ArrowRight,
-  BarChart3,
+  useDashboardNavigation,
+  type DashboardView,
+} from './useDashboardNavigation'
+import {
   Check,
-  ChevronRight,
   CircleHelp,
-  Inbox,
-  LayoutDashboard,
-  Mail,
   RefreshCw,
   Search,
-  Settings,
+  PanelLeft,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react'
 import {
-  categories,
   type ClassifiedMessage,
   type EmailCategory,
   type EmailRepository,
@@ -32,6 +27,13 @@ import { selectMessages } from '../features/inbox/selectMessages'
 import { summarize } from '../features/analytics/summarize'
 import { MessageList } from '../features/inbox/MessageList'
 import { MessageDetail } from '../features/inbox/MessageDetail'
+import { MessageReadingPane } from '../features/inbox/MessageReadingPane'
+import { WorkspaceSettings } from '../features/settings/WorkspaceSettings'
+import {
+  useWorkspacePreferences,
+  useWideReadingPane,
+} from '../features/settings/workspacePreferences'
+import '../styles/workspace.css'
 import { StatusPanel } from '../components/common/StatusPanel'
 import { PreferenceStore } from '../repositories/preferenceStore'
 import { usePreferences } from '../hooks/usePreferences'
@@ -39,7 +41,8 @@ import {
   OnboardingWizard,
   type SetupStep,
 } from '../features/onboarding/OnboardingWizard'
-import { PersonalizationPanel } from '../features/onboarding/PersonalizationPanel'
+import { WorkspaceNavigation } from '../components/layout/WorkspaceNavigation'
+import { Disclosure } from '../components/common/Disclosure'
 import { PreferenceSettings } from '../features/settings/PreferenceSettings'
 import {
   orderCategories,
@@ -47,13 +50,6 @@ import {
   enabledFocus,
 } from '../features/onboarding/personalize'
 const repository = new MockEmailRepository()
-type View = 'Overview' | 'Inbox explorer' | 'Analytics' | 'Settings'
-const navigation = [
-  { name: 'Overview', icon: LayoutDashboard },
-  { name: 'Inbox explorer', icon: Inbox },
-  { name: 'Analytics', icon: BarChart3 },
-  { name: 'Settings', icon: Settings },
-] as const
 export function App({
   emailRepository = repository,
   authorization: suppliedAuthorization,
@@ -63,7 +59,38 @@ export function App({
   authorization?: GmailAuthorization
   preferenceStore?: PreferenceStore
 }) {
-  const [view, setView] = useState<View>('Overview')
+  const workspace = useWorkspacePreferences()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  const { view, setView } = useDashboardNavigation(
+    workspace.preferences.defaultView,
+  )
+  const usePane = useWideReadingPane(
+    workspace.preferences.readingLayout === 'split',
+  )
+  const searchInput = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      if (
+        event.key !== '/' ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.defaultPrevented ||
+        document.querySelector('dialog[open]')
+      )
+        return
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.closest('input,textarea,select,[contenteditable="true"]')
+      )
+        return
+      event.preventDefault()
+      searchInput.current?.focus()
+    }
+    document.addEventListener('keydown', focusSearch)
+    return () => document.removeEventListener('keydown', focusSearch)
+  }, [])
   const [preferenceStore] = useState(
     () => suppliedPreferenceStore ?? new PreferenceStore(),
   )
@@ -90,6 +117,14 @@ export function App({
   )
   const mailbox = useMailbox(emailRepository, authorization)
   const { messages, status, isLive, refresh } = mailbox
+  const refreshLabel =
+    status === 'loading'
+      ? isLive
+        ? 'Loading Gmail…'
+        : 'Loading demo…'
+      : isLive
+        ? 'Refresh Gmail'
+        : 'Refresh demo'
   const sourceLabel = isLive ? 'Live Gmail sample' : 'Mock data'
   const rangeLabel = messages.length
     ? `${messages.at(-1)!.receivedAt.slice(0, 10)} – ${messages[0]!.receivedAt.slice(0, 10)}`
@@ -100,17 +135,27 @@ export function App({
   const [selection, setSelection] = useState<{
     id: string
     key: string
+    view: DashboardView
   } | null>(null)
   useEffect(
     () => authorization.subscribe(() => setSelection(null)),
     [authorization],
   )
   const selected =
-    selection?.key === mailbox.key
+    selection?.key === mailbox.key && selection.view === view
       ? (messages.find((message) => message.id === selection.id) ?? null)
       : null
-  const setSelected = (message: ClassifiedMessage) =>
-    setSelection({ id: message.id, key: mailbox.key })
+  const setSelected = (message: ClassifiedMessage) => {
+    setSelection({ id: message.id, key: mailbox.key, view })
+  }
+  const closeSelection = () => {
+    const row = document.querySelector<HTMLButtonElement>(
+      '.mail-row[aria-current="true"]',
+    )
+    setSelection(null)
+    if (row) row.focus()
+    else searchInput.current?.focus()
+  }
   const stats = summarize(messages)
   const displayCategories = orderCategories(
     stats.categories,
@@ -125,20 +170,6 @@ export function App({
     mailbox.events,
     isLive ? 'real' : 'synthetic',
   )
-  const chartColors = ['#46785c', '#9eae89', '#c1a66d', '#7d9991', '#a9b39b']
-  const categoryGradient = displayCategories
-    .map((item, index) => {
-      const start = stats.total
-        ? (displayCategories
-            .slice(0, index)
-            .reduce((sum, entry) => sum + entry.count, 0) /
-            stats.total) *
-          100
-        : 0
-      const end = start + (stats.total ? (item.count / stats.total) * 100 : 0)
-      return `${chartColors[index % chartColors.length]} ${start}% ${end}%`
-    })
-    .join(', ')
   const visible = selectMessages(displayMessages, query, category, priority)
   const resetFilters = () => {
     setQuery('')
@@ -153,481 +184,159 @@ export function App({
   }
   return (
     <div
-      className="app-shell"
+      className={`app-shell email-workspace ${view === 'Inbox explorer' ? 'is-inbox' : ''} density-${workspace.preferences.density} sidebar-${workspace.preferences.sidebarState}`}
+      data-load-status={status}
       data-retained-live-message-count={mailbox.retainedLiveMessageCount}
     >
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          onClick={(event) => {
-            event.preventDefault()
-            setView('Overview')
-          }}
-        >
-          <span className="brand-mark">
-            <Mail size={22} />
-          </span>
-          <span>
-            inbox<span className="brand-light">intelligence</span>
-            <small>A LITTLE MORE CLARITY.</small>
-          </span>
-        </a>
-        <div className="workspace">
-          <span className="workspace-icon">{isLive ? 'G' : 'D'}</span>
-          <div>
-            <strong>{isLive ? 'Gmail workspace' : 'Demo workspace'}</strong>
-            <span>
-              {isLive ? 'Partial metadata sample' : 'Synthetic email data'}
-            </span>
-          </div>
-          <span className="workspace-dot" />
-        </div>
-        <p className="nav-label">WORKSPACE</p>
-        <nav aria-label="Main navigation">
-          {navigation.map(({ name, icon: Icon }) => (
-            <button
-              key={name}
-              aria-label={name}
-              onClick={() => setView(name)}
-              className={`nav-item ${view === name ? 'active' : ''}`}
-              aria-current={view === name ? 'page' : undefined}
-            >
-              <Icon size={19} />
-              <span>{name}</span>
-              {name === 'Inbox explorer' && (
-                <span className="nav-count">{stats.total}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-note">
-          <ShieldCheck size={22} />
-          <strong>Your inbox. Your space.</strong>
-          <p>
-            {isLive
-              ? 'Live metadata stays in this page session. No bodies, attachments, or external AI.'
-              : 'This demo stays in your browser. No Gmail connection. No external AI.'}
-          </p>
-          <button onClick={() => setView('Settings')}>
-            Explore our approach <ArrowRight size={14} />
-          </button>
-        </div>
-        <div className="sidebar-footer">
-          <span className="avatar avatar-0">DI</span>
-          <div>
-            <strong>{isLive ? 'Gmail explorer' : 'Demo explorer'}</strong>
-            <small>Personal workspace</small>
-          </div>
-          <span className="demo-dot" />
-        </div>
-      </aside>
+      <a className="skip-link" href="#main-content">
+        Skip to workspace
+      </a>
+      <WorkspaceNavigation
+        view={view}
+        onNavigate={setView}
+        collapsed={workspace.preferences.sidebarState === 'collapsed'}
+        drawerOpen={drawerOpen}
+        onClose={closeDrawer}
+      />
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumb">
-            Workspace <ChevronRight size={14} />
-            <strong>{view}</strong>
-          </div>
-          <div className="topbar-right">
-            <span className="mock-pill">
-              <span />
-              {sourceLabel}
+          <button
+            className="button sidebar-toggle desktop-toggle"
+            aria-expanded={workspace.preferences.sidebarState === 'expanded'}
+            aria-controls="desktop-navigation"
+            aria-label={
+              workspace.preferences.sidebarState === 'expanded'
+                ? 'Collapse sidebar'
+                : 'Expand sidebar'
+            }
+            title={
+              workspace.preferences.sidebarState === 'expanded'
+                ? 'Collapse sidebar'
+                : 'Expand sidebar'
+            }
+            onClick={() =>
+              workspace.save({
+                ...workspace.preferences,
+                sidebarState:
+                  workspace.preferences.sidebarState === 'expanded'
+                    ? 'collapsed'
+                    : 'expanded',
+              })
+            }
+          >
+            <PanelLeft size={20} />
+          </button>
+          <button
+            className="button sidebar-toggle mobile-toggle"
+            aria-label="Open navigation"
+            aria-expanded={drawerOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <PanelLeft size={20} />
+          </button>
+          <form
+            className="workspace-search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault()
+              setView('Inbox explorer')
+            }}
+          >
+            <label className="search-input">
+              <Search size={20} />
+              <input
+                ref={searchInput}
+                aria-label="Search messages"
+                aria-describedby="workspace-search-help"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value)
+                  setView('Inbox explorer')
+                }}
+                placeholder="Search loaded messages"
+              />
+              <kbd aria-hidden="true">/</kbd>
+            </label>
+            <span id="workspace-search-help" className="sr-only">
+              Sender, subject and mock snippets · local search, no Gmail
+              operators
             </span>
-            <span className="local-indicator">
-              <ShieldCheck size={15} /> Browser only
-            </span>
-          </div>
+          </form>
+          <Disclosure
+            label={sourceLabel}
+            className="source-disclosure"
+            attention={
+              mailbox.auth.status === 'error' ||
+              mailbox.auth.status === 'expired'
+            }
+          >
+            <GmailConnection
+              authorization={authorization}
+              state={mailbox.auth}
+            />
+            <p>
+              {isLive
+                ? 'Read-only metadata sample, excluding Spam and Trash. No bodies or attachments.'
+                : 'All messages, insights and processing metrics are synthetic. Gmail is not connected.'}{' '}
+              Mail and tokens stay in session memory.
+            </p>
+            {isLive && mailbox.diagnostics && (
+              <GmailDiagnostics
+                diagnostics={mailbox.diagnostics}
+                durationMs={mailbox.durationMs}
+              />
+            )}
+            {status === 'ready' && (
+              <p>
+                <strong>
+                  {isLive
+                    ? 'Gmail sample processing complete'
+                    : 'Demo processing complete'}
+                </strong>{' '}
+                · {metrics.indexed} indexed · {metrics.classified}{' '}
+                classifications · {stats.unknown} need a closer look
+              </p>
+            )}
+          </Disclosure>
         </header>
-        <main id="main-content">
+        <main id="main-content" tabIndex={-1}>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">UNDERSTAND YOUR INBOX</div>
               <h1>
-                {view === 'Overview'
-                  ? 'Less noise. More perspective.'
-                  : view === 'Inbox explorer'
-                    ? 'A clearer view of every message.'
-                    : view === 'Analytics'
-                      ? 'Find the patterns that matter.'
-                      : 'A workspace you can trust.'}
+                {view === 'Inbox explorer'
+                  ? 'Inbox'
+                  : view === 'Settings'
+                    ? 'Settings'
+                    : 'Insights'}
               </h1>
               <p>
-                {view === 'Overview'
-                  ? 'Your email, thoughtfully organized. Here’s the bigger picture.'
-                  : view === 'Inbox explorer'
-                    ? 'Search, explore, and understand why a message belongs.'
-                    : view === 'Analytics'
-                      ? isLive
-                        ? 'Explore this Gmail metadata sample. These charts do not cover your full mailbox.'
-                        : 'Explore trends across the synthetic mailbox. Every chart uses mock data.'
-                      : 'Transparent by design. You’re always in control of what comes next.'}
+                {sourceLabel} ·{' '}
+                {view === 'Inbox explorer'
+                  ? `${stats.unread} unread · loaded set`
+                  : 'Loaded messages only'}
               </p>
             </div>
-            <button
-              className="button refresh"
-              disabled={status === 'loading'}
-              onClick={refresh}
-            >
-              <RefreshCw
-                size={16}
-                className={status === 'loading' ? 'spinning' : ''}
-              />
-              {status === 'loading'
-                ? isLive
-                  ? 'Loading Gmail…'
-                  : 'Loading demo…'
-                : isLive
-                  ? 'Refresh Gmail'
-                  : 'Refresh demo'}
-            </button>
-          </div>
-          <GmailConnection authorization={authorization} state={mailbox.auth} />
-          {editor ? (
-            <OnboardingWizard
-              key={editor.generation}
-              initial={personalization.preferences}
-              startStep={editor.step}
-              onSave={(preferences) => {
-                personalization.save(preferences)
-                setEditor(null)
-              }}
-              onDismiss={dismissSetup}
-            />
-          ) : (
-            <PersonalizationPanel
-              preferences={personalization.preferences}
-              notice={personalization.notice}
-              onStart={() => openSetup()}
-              onSkip={personalization.skip}
-            />
-          )}
-
-          <div className="demo-banner">
-            <Sparkles size={17} />
-            <p>
-              {isLive ? (
-                <>
-                  <strong>Live Gmail · partial coverage.</strong> Up to the
-                  newest 100 messages, excluding Spam and Trash. Metadata only;
-                  no bodies or attachments. All charts describe this sample.
-                </>
-              ) : (
-                <>
-                  <strong>A preview of a calmer inbox.</strong> All messages,
-                  insights, and processing metrics are synthetic. Gmail is not
-                  connected.
-                </>
-              )}
-            </p>
-            <span>{isLive ? 'READ ONLY' : 'DEMO MODE'}</span>
-          </div>
-          {isLive && (
-            <p className="coverage-note" role="status">
-              {mailbox.coverage
-                ? `${mailbox.coverage.loaded} of ${mailbox.coverage.discovered} selected messages loaded; ${mailbox.coverage.failed} failed. ${mailbox.coverage.hasMore ? 'More messages exist outside this sample.' : 'End of this listing reached.'} Spam and Trash excluded; this is not a full-mailbox sync.`
-                : mailbox.progress
-                  ? `Loading ${mailbox.progress.phase}: ${mailbox.progress.completed} of ${mailbox.progress.total}. Partial coverage only.`
-                  : 'Preparing the newest-message sample.'}
-            </p>
-          )}
-          {isLive && mailbox.diagnostics && (
-            <GmailDiagnostics
-              diagnostics={mailbox.diagnostics}
-              durationMs={mailbox.durationMs}
-            />
-          )}
-          {status === 'loading' ? (
-            <StatusPanel
-              title={isLive ? 'Reading Gmail metadata' : 'Preparing your demo'}
-              description={
-                isLive
-                  ? 'Retrieving up to 100 messages with read-only requests. You can disconnect to cancel.'
-                  : 'Loading synthetic messages and applying local classification rules.'
-              }
-            />
-          ) : status === 'error' ? (
-            <StatusPanel
-              error
-              title={
-                isLive
-                  ? 'Gmail metadata could not load'
-                  : 'The demo could not load'
-              }
-              description={mailbox.error}
-              action="Try again"
-              onAction={refresh}
-            />
-          ) : (
-            <>
-              {view === 'Overview' && (
-                <>
-                  <div className="section-kicker">
-                    <span>YOUR INBOX AT A GLANCE</span>
-                    <span>
-                      {isLive
-                        ? `Gmail sample · ${rangeLabel}`
-                        : 'Mock mailbox · 8–31 Oct 2026'}
-                    </span>
-                  </div>
-                  <div className="stat-grid">
-                    {[
-                      {
-                        label: 'Indexed messages',
-                        value: stats.total,
-                        detail: 'Across 11 categories',
-                        icon: Mail,
-                      },
-                      {
-                        label: 'Unread messages',
-                        value: stats.unread,
-                        detail: 'Ready when you are',
-                        icon: Inbox,
-                      },
-                      {
-                        label: 'High priority',
-                        value: stats.high,
-                        detail: 'Worth a closer look',
-                        icon: Activity,
-                      },
-                      {
-                        label: isLive
-                          ? 'Metadata loaded'
-                          : 'Metadata-only decisions',
-                        value: isLive
-                          ? metrics.metadataOnly
-                          : `${Math.round((metrics.avoidance ?? 0) * 100)}%`,
-                        detail: isLive
-                          ? 'No bodies requested'
-                          : 'Simulated retrieval policy',
-                        icon: ShieldCheck,
-                      },
-                    ].map(({ label, value, detail, icon: Icon }) => (
-                      <article className="stat-card" key={label}>
-                        <div className="stat-top">
-                          <span>{label}</span>
-                          <Icon size={18} />
-                        </div>
-                        <strong>{value}</strong>
-                        <p>{detail}</p>
-                      </article>
-                    ))}
-                  </div>
-                  <div className="overview-grid">
-                    <section className="panel category-panel">
-                      <div className="panel-heading">
-                        <div>
-                          <h2>A place for everything</h2>
-                          <p>Category distribution · {sourceLabel}</p>
-                        </div>
-                        <span className="soft-icon">
-                          <BarChart3 size={18} />
-                        </span>
-                      </div>
-                      <div className="category-chart">
-                        <div
-                          className="donut"
-                          style={{
-                            background: `conic-gradient(${categoryGradient})`,
-                          }}
-                          role="img"
-                          aria-label={`${sourceLabel} category distribution: ${stats.total} messages across ${categories.length} categories`}
-                        >
-                          <div>
-                            <strong>{stats.total}</strong>
-                            <span>messages</span>
-                          </div>
-                        </div>
-                        <div className="chart-summary">
-                          <span className="mini-label">A THOUGHTFUL SORT</span>
-                          <strong>
-                            {categories.length} categories,
-                            <br />
-                            one clear picture.
-                          </strong>
-                          <p>
-                            Rules bring order.
-                            <br />
-                            You bring the context.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="category-bars">
-                        {displayCategories.map((item, index) => (
-                          <button
-                            key={item.name}
-                            onClick={() => openCategory(item.name)}
-                          >
-                            <span
-                              className={`category-dot color-${index % 5}`}
-                            />
-                            <span>{item.name}</span>
-                            <span className="bar-track">
-                              <span
-                                className={`color-bg-${index % 5}`}
-                                style={{
-                                  width: `${(item.count / Math.max(stats.total, 1)) * 100 * 4}%`,
-                                }}
-                              />
-                            </span>
-                            <strong>{item.count}</strong>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                    <section className="panel priority-panel">
-                      <div className="panel-heading">
-                        <div>
-                          <h2>A little attention, please</h2>
-                          <p>Recent high-priority messages · {sourceLabel}</p>
-                        </div>
-                        <span className="attention-dot" />
-                      </div>
-                      {
-                        <MessageList
-                          items={displayMessages
-                            .filter(
-                              (message) =>
-                                message.classification.priority === 'High',
-                            )
-                            .slice(0, 4)}
-                          compact
-                          onSelect={setSelected}
-                        />
-                      }
-                      <button
-                        className="panel-link"
-                        onClick={() => {
-                          resetFilters()
-                          setPriority('High')
-                          setView('Inbox explorer')
-                        }}
-                      >
-                        Explore priority messages <ArrowRight size={15} />
-                      </button>
-                      <div className="explanation-note">
-                        <Sparkles size={17} />
-                        <p>
-                          <strong>No black boxes here.</strong>
-                          <br />
-                          Open a message to see the rule behind its category.
-                        </p>
-                      </div>
-                    </section>
-                  </div>
-                  <div className="lower-grid">
-                    <section className="panel">
-                      <div className="panel-heading">
-                        <div>
-                          <h2>Familiar faces</h2>
-                          <p>Recurring sender patterns · {sourceLabel}</p>
-                        </div>
-                        <button
-                          className="text-button"
-                          onClick={() => setView('Analytics')}
-                        >
-                          All insights <ArrowRight size={14} />
-                        </button>
-                      </div>
-                      {stats.senders.slice(0, 4).map((sender, index) => (
-                        <div className="sender-row" key={sender.name}>
-                          <span className={`avatar avatar-${index}`}>
-                            {sender.name.slice(0, 1)}
-                          </span>
-                          <div>
-                            <strong>{sender.name}</strong>
-                            <span>
-                              {isLive
-                                ? 'Sender in this sample'
-                                : 'Recurring synthetic sender'}
-                            </span>
-                          </div>
-                          <strong>
-                            {sender.count}
-                            <small> messages</small>
-                          </strong>
-                        </div>
-                      ))}
-                    </section>
-                    <section className="panel processing-panel">
-                      <div className="panel-heading">
-                        <div>
-                          <h2>Less fetching. More intention.</h2>
-                          <p>
-                            {isLive
-                              ? 'Current metadata retrieval'
-                              : 'Processing policy simulation'}
-                          </p>
-                        </div>
-                        <ShieldCheck size={19} />
-                      </div>
-                      <div className="processing-number">
-                        {metrics.metadataOnly}
-                        <span>of {stats.total} messages</span>
-                      </div>
-                      <p>
-                        {isLive
-                          ? 'All loaded messages were classified from metadata. Unfamiliar messages remain visible; this phase never fetches bodies.'
-                          : 'Classified from metadata under the demo policy. Unfamiliar messages are marked for deeper review.'}
-                      </p>
-                      <div className="efficiency-track">
-                        <span
-                          style={{
-                            width: `${(metrics.avoidance ?? 0) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="processing-legend">
-                        <span>
-                          <i /> Metadata only
-                        </span>
-                        <span>
-                          {metrics.bodyRequests}{' '}
-                          {isLive ? 'body requests' : 'body-request events'}
-                        </span>
-                      </div>
-                      <div className="quiet-note">
-                        <CircleHelp size={15} />{' '}
-                        {isLive
-                          ? 'Metadata-only counts do not establish API savings or accuracy.'
-                          : 'Simulated decisions, not measured Gmail API savings.'}
-                      </div>
-                    </section>
-                  </div>
-                  <section className="activity-strip">
-                    <span className="activity-check">
-                      <Check size={17} />
-                    </span>
-                    <div>
-                      <strong>
-                        {isLive
-                          ? 'Gmail sample processing complete'
-                          : 'Demo processing complete'}
-                      </strong>
-                      <p>
-                        {metrics.indexed}{' '}
-                        {isLive
-                          ? 'Gmail metadata records loaded'
-                          : 'synthetic messages indexed'}{' '}
-                        · {metrics.classified} classifications · {stats.unknown}{' '}
-                        need a closer look
-                      </p>
-                    </div>
-                    <span className="tag">Local session</span>
-                  </section>
-                </>
-              )}
+            <div className="workspace-actions">
+              <button
+                className="button refresh"
+                aria-label={refreshLabel}
+                title={refreshLabel}
+                disabled={status === 'loading'}
+                onClick={refresh}
+              >
+                <RefreshCw
+                  size={16}
+                  className={status === 'loading' ? 'spinning' : ''}
+                />
+                <span className="refresh-label">{refreshLabel}</span>
+              </button>
               {view === 'Inbox explorer' && (
-                <section className="panel inbox-panel">
+                <Disclosure
+                  label={`Filters${category !== 'All' || priority !== 'All' ? ' · active' : ''}`}
+                  className="filter-disclosure"
+                >
                   <div className="filter-toolbar">
-                    <label className="search-input">
-                      <Search size={18} />
-                      <input
-                        aria-label="Search messages"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Search sender, subject, or snippet…"
-                      />
-                    </label>
                     <label className="select-label">
                       Category
                       <select
@@ -664,33 +373,141 @@ export function App({
                       Reset filters
                     </button>
                   </div>
-                  <div className="results-heading">
-                    <strong>{visible.length} messages</strong>
-                    <span>
-                      {isLive ? 'Gmail sample' : 'Synthetic mailbox'} ·{' '}
-                      {focusActive
-                        ? 'your focus within rule-priority bands'
-                        : 'newest first'}
-                    </span>
-                  </div>
-                  {visible.length ? (
-                    <MessageList items={visible} onSelect={setSelected} />
-                  ) : (
-                    <StatusPanel
-                      title="No messages found"
-                      description={
-                        isLive
-                          ? 'This sample may be empty or no messages match. Clear filters or refresh the Gmail sample.'
-                          : 'Try another search or clear your filters to explore the demo mailbox.'
-                      }
-                      action="Clear filters"
-                      onAction={resetFilters}
+                </Disclosure>
+              )}
+            </div>
+          </div>
+          {editor ? (
+            <OnboardingWizard
+              key={editor.generation}
+              initial={personalization.preferences}
+              startStep={editor.step}
+              onSave={(preferences) => {
+                personalization.save(preferences)
+                setEditor(null)
+              }}
+              onDismiss={dismissSetup}
+            />
+          ) : !personalization.preferences ? (
+            <div
+              className="setup-invitation"
+              aria-label="Optional personalization"
+            >
+              <span>Make this view yours.</span>
+              <button className="text-button" onClick={() => openSetup()}>
+                Set up your view
+              </button>
+              <button className="text-button" onClick={personalization.skip}>
+                Skip setup
+              </button>
+            </div>
+          ) : null}
+          {personalization.notice && (
+            <p className="preference-notice" role="status">
+              {personalization.notice}
+            </p>
+          )}
+          {isLive && (
+            <p className="coverage-note" role="status">
+              {mailbox.coverage
+                ? `${mailbox.coverage.loaded} of ${mailbox.coverage.discovered} selected messages loaded; ${mailbox.coverage.failed} failed. ${mailbox.coverage.hasMore ? 'More messages exist outside this sample.' : 'End of this listing reached.'} Spam and Trash excluded; this is not a full-mailbox sync.`
+                : mailbox.progress
+                  ? `Loading ${mailbox.progress.phase}: ${mailbox.progress.completed} of ${mailbox.progress.total}. Partial coverage only.`
+                  : 'Preparing the newest-message sample.'}
+            </p>
+          )}
+          {status === 'loading' ? (
+            <StatusPanel
+              title={isLive ? 'Reading Gmail metadata' : 'Preparing your demo'}
+              description={
+                isLive
+                  ? 'Retrieving up to 100 messages with read-only requests. You can disconnect to cancel.'
+                  : 'Loading synthetic messages and applying local classification rules.'
+              }
+            />
+          ) : status === 'error' ? (
+            <StatusPanel
+              error
+              title={
+                isLive
+                  ? 'Gmail metadata could not load'
+                  : 'The demo could not load'
+              }
+              description={mailbox.error}
+              action="Try again"
+              onAction={refresh}
+            />
+          ) : (
+            <>
+              {view === 'Inbox explorer' && (
+                <div
+                  className={`inbox-reading-layout ${usePane && selected ? 'has-reading-pane' : ''}`}
+                >
+                  <section className="panel inbox-panel">
+                    <div className="results-heading">
+                      <strong>{visible.length} messages</strong>
+                      <span className="unread-count">
+                        {stats.unread} unread
+                      </span>
+                      <span>
+                        {isLive ? 'Gmail sample' : 'Synthetic mailbox'} ·{' '}
+                        {focusActive
+                          ? 'your focus within rule-priority bands'
+                          : 'newest first'}
+                      </span>
+                    </div>
+                    {visible.length ? (
+                      <MessageList
+                        workspace
+                        items={visible}
+                        selectedId={selected?.id}
+                        onSelect={setSelected}
+                      />
+                    ) : (
+                      <StatusPanel
+                        title="No messages found"
+                        description={
+                          isLive
+                            ? 'This sample may be empty or no messages match. Clear filters or refresh the Gmail sample.'
+                            : 'Try another search or clear your filters to explore the demo mailbox.'
+                        }
+                        action="Clear filters"
+                        onAction={resetFilters}
+                      />
+                    )}
+                  </section>
+                  {usePane && selected && (
+                    <MessageReadingPane
+                      message={selected}
+                      isLive={isLive}
+                      onClose={closeSelection}
                     />
                   )}
-                </section>
+                </div>
               )}
-              {view === 'Analytics' && (
+              {(view === 'Analytics' || view === 'Overview') && (
                 <div className="analytics-grid">
+                  <div className="insights-summary">
+                    <span>{stats.total} indexed</span>
+                    <span>{stats.unread} unread</span>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setPriority('High')
+                        setCategory('All')
+                        setQuery('')
+                        setView('Inbox explorer')
+                      }}
+                    >
+                      {stats.high} high priority
+                    </button>
+                    <span>{stats.unknown} unknown</span>
+                    <span>
+                      {isLive
+                        ? 'Metadata sample'
+                        : `${Math.round((metrics.avoidance ?? 0) * 100)}% metadata-only · simulated`}
+                    </span>
+                  </div>
                   <section className="panel">
                     <div className="panel-heading">
                       <div>
@@ -815,6 +632,12 @@ export function App({
               )}
               {view === 'Settings' && (
                 <div className="settings-grid">
+                  <WorkspaceSettings
+                    preferences={workspace.preferences}
+                    notice={workspace.notice}
+                    onChange={workspace.save}
+                    onReset={workspace.reset}
+                  />
                   <PreferenceSettings
                     preferences={personalization.preferences}
                     onEdit={(step) => openSetup(step)}
@@ -898,20 +721,18 @@ export function App({
               )}
             </>
           )}
-          <footer className="page-footer">
-            <span>
-              <span className="footer-mark" /> Built for clarity. Designed for
-              privacy.
-            </span>
-            <span>Inbox Intelligence · Phase 3A preview</span>
-          </footer>
+          {view !== 'Settings' && workspace.notice && (
+            <p className="display-notice" role="status">
+              {workspace.notice}
+            </p>
+          )}
         </main>
       </div>
-      {selected && (
+      {selected && !(view === 'Inbox explorer' && usePane) && (
         <MessageDetail
           message={selected}
           isLive={isLive}
-          onClose={() => setSelection(null)}
+          onClose={closeSelection}
         />
       )}
     </div>

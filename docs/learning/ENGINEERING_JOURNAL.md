@@ -95,3 +95,47 @@ The trade-off is that a client attempt count cannot prove server receipt and the
 10. **Interview framing:** “I personalized ranking from optional explicit declarations, kept classifier evidence intact, persisted a strict allowlist and tested that saving/resetting preferences could not restart or erase the mailbox session.”
 
 Permanent ten-concept walkthrough: PHASE3A_CONCEPTS.md. Branch inspected as feat/personalized-onboarding at clean 4a06d27 before edits. No new dependencies, credentials/Cloud changes, real Gmail access, push, deploy or commit; implementation awaits owner review. Historical Phase 2 owner-reported live observations remain separate from this synthetic verification.
+
+## 2026-11-03 — Unified public landing and dark identity
+
+1. **Problem:** establish a public product surface and shared visual identity while preserving verified Phase 3A and read-only Gmail behavior.
+2. **Concept:** semantic tokens, incremental component migration, responsive composition and public/private state boundaries.
+3. **Choice:** independently authored black/charcoal/off-white/lime system; native CSS/controls, an original synthetic preview, Entry plus fixed History API workspace paths.
+4. **Alternatives:** copy/remix template assets, add a router/animation/design framework, rebuild the dashboard or mount live mail behind marketing content.
+5. **Trade-offs:** minimal dependencies and unchanged business contracts; compatibility CSS aliases and a small routing hook need maintenance. Direct paths require host fallback; normal public/app document navigation does not revoke Google consent; fresh loads reset state, but browser history cache may restore earlier memory.
+6. **Implementation:** tokens.css drives existing selectors and Tailwind theme aliases; landing components accept no connected state. App gains route/view navigation, chart-token references, a public return link and skip-link/main semantics; personalization/auth/storage algorithms remain untouched.
+7. **Mistakes and refinements:** contrast test initially read an empty disabled CSS import, then used a URL transformed by the test environment; reading the explicit repository source path fixed the test boundary. FAQ decorative text required a summary locator. Existing reload assertions needed to verify retained Inbox routes instead of Overview-only completion text. Visual review found a wrapped mobile header CTA, corrected with a compact grid and reverified in production.
+8. **Correctness:** 155 unit/component tests pass; all original 15 Chromium workflows plus new route/privacy/contrast scenarios pass as recorded in VERIFICATION.md. Production-preview suites and inspected synthetic screenshots supplement dev checks. Token pairs and rendered solid backgrounds meet tested contrast thresholds; no full accessibility certification or user performance claim is made.
+9. **Industry analogue:** design migrations work best when presentation, data authority and persistent contracts remain separate. Asset/license provenance and real browser evidence belong in the review, not just source code.
+10. **Interview framing:** “I unified tokens across public and private surfaces, kept Gmail/onboarding contracts unchanged, and tested direct navigation plus live-fixture-to-public isolation without adding a framework or copying restricted assets.”
+
+Initial tree was clean on feat/clario-design at 5ad1b62; this was the existing scoped branch despite the prompt's expected onboarding branch. No branch switch, dependency install, credential/Cloud change, real mailbox access, commit, push or deployment. Ten-topic lesson with alternatives: DESIGN_SYSTEM_CONCEPTS.md. Actual checks, limitations and screenshot paths: ../quality/VERIFICATION.md.
+
+## 2026-11-03 — Inbox-first workspace and capability roadmap
+
+1. **Problem:** move task entry from analytics cards to familiar email search/reading without broadening Gmail access or overwriting uncommitted Clario work.
+2. **Concept:** recognition/task hierarchy, optional user control, source-quality labeling and separate authority/content boundaries.
+3. **Choice:** Inbox default with explicit Overview route, global existing search, scan-friendly rows, separate display enums and optional wide reading pane reusing already-loaded text.
+4. **Alternatives:** keep analytics first, force a pane/density, emulate all Gmail operators/writes, change onboarding schema or combine full reading/send/AI into a visual task.
+5. **Trade-offs:** more familiar surface and reversible layout choices are design hypotheses; no participant benefit is measured. Root /app behavior changes intentionally, while explicit Overview and all other views remain reachable. Local UI preferences remain origin-bound and unencrypted.
+6. **Implementation:** a strict workspace-preference hook validates four fields; navigation resolves default only for /app. MessageContent shares the existing text/explanation renderer across modal/pane. Search/filter/classification/Gmail/onboarding services are retained. Full reader/send/AI are separate documented plans.
+7. **Issues fixed:** unknown JSON needed a proper type predicate; Testing Library role options differ from browser locators; direct-App tests needed the actual /app path; new select controls needed explicit accessible names. No malformed-input cast or weakened Gmail assertion was used to hide errors.
+8. **Correctness:** pre-change 21-browser baseline passed and screenshots were preserved. Implementation checks passed as recorded in VERIFICATION.md, including display reset/default/pane keyboard and fake Gmail request-count preservation. Before/after screenshots are synthetic structural evidence, not user-study outcomes.
+9. **Industry analogue:** maintain capability separation when a product grows: a reading layout is not body-fetch consent; read retry policy is not safe send retry policy; Google authorization is not external AI consent.
+10. **Interview framing:** “I made the task surface inbox-first, kept private API authority unchanged, separated reversible display preferences from onboarding declarations, and designed evidence-driven usability/reader/send/AI milestones rather than claiming unbuilt capabilities.”
+
+The user-study protocol has no participants/results. Sources/confidence: EMAIL_UX_RESEARCH.md; ten-topic teaching guide: EMAIL_WORKSPACE_CONCEPTS.md. No real Gmail, extra OAuth permission, send, external model, paid resource, commit, push or deployment occurred. Existing uncommitted Clario work remains preserved on feat/clario-design.
+
+Workspace visual QA refinement: the first mobile capture showed status/setup/filter boilerplate crowding messages despite functional tests passing. Concise Inbox-only copy, native Display options disclosure and adjacent reset action reduced that space; a 390×844 first-row check was added. A duplicated local variable in that new test and a missing disclosure click were corrected before final passing runs. Selection was additionally bound to its view so Analytics does not unexpectedly open a modal; focus return now looks up the current row rather than retaining detached message DOM content. These are engineering/design corrections, not measured user-study improvements.
+
+## 2026-11-03 — Simplification after owner rejection
+
+Problem: a functional inbox was crowded by repeated navigation/categories, connection/setup/status cards and duplicated display controls. Inspected the real synthetic application at four widths and actual 200% Chrome zoom before editing. Preserved the cumulative uncommitted Phase 3A/Clario/workspace work; no commit, account access or deployment.
+
+Decision: one three-destination navigation, desktop rail/mobile native drawer, one compact toolbar, Filters/source disclosures, Settings-only display controls and no empty reader. Consolidate Overview/Analytics presentation while preserving their URLs and all aggregators. Extend only display schema v1→v2 for sidebar state; strict allowlists, no load write and independent resets protect the existing profile schema. Smaller flat rows retain complete explanations in the original reader.
+
+A browser regression exposed background disclosure Escape handling swallowing a modal dismissal; background handlers now defer to an active dialog. Another check exposed inherited fixed content widths that collapsed the rail without enlarging the list; main width now uses the same sidebar variable. Tests must assess actual geometry and keyboard behavior rather than only checking a class. The shared responsive nav rule also needed explicit visible drawer labels. See verification for final measured outcomes and limitations, not earlier failed-run counts as successes.
+
+Teaching notes: [progressive disclosure, cognitive load, hierarchy, navigation, focus and persistence](UX_SIMPLIFICATION_CONCEPTS.md). Removing controls from permanent view creates a discovery trade-off; owner review and a comparative study remain necessary. Pixel positions and passing tests do not establish faster task completion.
+
+Verification lesson: overlapping development/production Playwright runs shared an output directory and caused an ENOENT trace-cleanup failure despite passing interaction assertions. Production artifacts now use preview-runs; final suites run sequentially. Test infrastructure failures are recorded and rerun, never counted as passing evidence.

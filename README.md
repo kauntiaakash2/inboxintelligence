@@ -6,10 +6,10 @@ Phase 3A adds optional personalized onboarding. The app keeps **96 synthetic mes
 
 ## Capabilities
 
-- Overview with indexed/unread/priority counts, category distribution, sender patterns, and local processing activity.
+- Inbox-first workspace with an expandable desktop sidebar, accessible mobile drawer and contextual search/filter/source controls.
 - Inbox explorer with sender/subject/snippet search, combined category and priority filters, labels and read status.
 - Keyboard-accessible message details with plain-text content, rule ID, reasons, heuristic confidence, and priority score.
-- Analytics with category totals, top senders, daily frequency, priorities, and clearly labeled synthetic processing decisions.
+- Insights consolidates category totals, top senders, daily frequency, priorities and clearly labeled processing decisions; both legacy analytics URLs remain available.
 - Connect → Authorize Gmail flow, safe error states, progress, partial coverage, explicit refresh, and disconnect/revocation.
 - Source-aware dashboard and settings; all live charts describe only the loaded sample. Spam and Trash are excluded.
 
@@ -97,4 +97,37 @@ Enabled focus categories reorder category charts/controls and messages within ex
 
 Only schema version, completed/skipped status, declared profile, goals and enabled categories persist in the origin-local `inbox-intelligence.preferences` key. No mailbox/account/token field is accepted. Preferences survive disconnect and reload; Gmail authorization and messages do not survive reload. Browser storage errors are explained and fall back to tab-local choices. Reset removes only this key; it does not disconnect Gmail. Unsupported schemas are ignored until explicitly reset or replaced. Preferences apply to this browser origin, not an account, device network or Google profile. No cross-tab synchronization or cloud portability exists.
 
-See [Phase 3A change report](docs/quality/PHASE3A_CHANGE_REPORT.md), [verification](docs/quality/VERIFICATION.md) and [ADR 0005](docs/architecture/ADR/0005-optional-declared-preferences.md). No dependencies or OAuth settings changed; this implementation awaits review and is not committed.
+See [Phase 3A change report](docs/quality/PHASE3A_CHANGE_REPORT.md), [verification](docs/quality/VERIFICATION.md) and [ADR 0005](docs/architecture/ADR/0005-optional-declared-preferences.md). No dependencies or OAuth settings changed. Phase 3A is checkpointed as 5ad1b62; the later unified design changes await review.
+
+## Public landing and unified visual identity
+
+The current design milestone adds a public landing page at **/** and retains the usable mock/Gmail workspace at **/app**. Inbox, Analytics and Settings are addressable at /app/inbox, /app/analytics and /app/settings. Back/Forward works between workspace views; direct loads restore the view. Normal links between public and app pages use document navigation; fresh loads start without authorization/mail, while browser back/forward cache may restore an earlier page. Navigation does not revoke Google consent; use Disconnect for explicit clearing/revocation. No SaaS login was added.
+
+One semantic token layer supplies near-black/charcoal surfaces, off-white/gray text and lime actions across landing, dashboard and optional onboarding. Gmail authorization, scope, classifications, personalization mappings and version-1 preference persistence remain unchanged. Public preview counts come only from bundled synthetic fixtures, never connected state. Current and planned features are labeled honestly; no signup/waitlist backend, tracking service, pricing tier, remote font or copied template asset exists.
+
+```text
+src/app/Entry.tsx                    public/workspace/unknown boundary
+src/app/useDashboardNavigation.ts   fixed view URLs and popstate
+src/features/landing/               original page, synthetic preview, responsive CSS
+src/styles/tokens.css               shared semantic theme
+browser-tests/landing.spec.ts       public/routing/privacy/contrast checks
+playwright.preview.config.ts       built-bundle verification
+```
+
+Run the usual checks and npm run test:e2e. After npm run build, npx playwright test --config playwright.preview.config.ts verifies the production bundle locally with fake Google responses. Static deployment remains unperformed and needs a reviewed SPA fallback, security headers and origin configuration.
+
+[Design/reference/license note](docs/design/CLARIO_ADAPTATION.md) · [design system](docs/design/DESIGN_SYSTEM.md) · [complete design change report](docs/quality/CLARIO_CHANGE_REPORT.md) · [verification](docs/quality/VERIFICATION.md). Phase 3A was checkpointed by the owner as 5ad1b62; this design work is uncommitted pending review.
+
+## Inbox-first workspace revision
+
+/app now defaults to **Inbox**, or your saved display default. /app/overview retains the analytics-first Overview; /app/inbox, /app/analytics and /app/settings remain explicit links. The public Clario landing is unchanged. Search is prominent across app views and remains local substring matching; Gmail search operators/full-mailbox search are not implemented. Rows show sender, subject, category/priority, date and unchanged Gmail read status.
+
+Choose Comfortable/Compact and optional Side-by-side reading in Inbox or Settings. The pane works at >=1100px and falls back to the native dialog on smaller screens. It shows already-loaded synthetic content or live metadata, **never newly fetched bodies**. Opening mail does not mark it read. Analytics stays available from contextual navigation and its own view.
+
+A separate version-1 inbox-intelligence.workspace localStorage record stores only density/layout/default-view choices. Existing onboarding preferences and algorithms are preserved. No tokens, email, identifiers or searches persist. Display reset and onboarding reset are independent; default-view changes apply on the next /app visit, not to explicit links or the active Gmail session.
+
+[UX research and proposed study](docs/product/EMAIL_UX_RESEARCH.md) distinguishes published findings, official patterns, anecdotes and hypotheses. No participant outcome is claimed. Full [reader](docs/architecture/GMAIL_READER_DESIGN.md), [send](docs/architecture/GMAIL_SEND_DESIGN.md) and [AI](docs/architecture/AI_SUMMARIZATION_DESIGN.md) documents are follow-up designs only; no Gmail scope/retrieval/write or model capability changed. Review actual results in [verification](docs/quality/VERIFICATION.md) and [workspace change report](docs/quality/WORKSPACE_CHANGE_REPORT.md). No commit, push, deployment or real-mail test occurred.
+
+## Workspace simplification review
+
+Density, reading layout and default workspace are in Settings; desktop sidebar state is saved in the separate validated display key (v1 migrates to v2 without writing on load). The optional reader appears on selection. Onboarding mappings/storage and Gmail security/retrieval are unchanged. [Clutter audit](docs/design/UX_SIMPLIFICATION_AUDIT.md), [change report](docs/quality/SIMPLIFICATION_CHANGE_REPORT.md) and [learning notes](docs/learning/UX_SIMPLIFICATION_CONCEPTS.md) describe the changes. Owner visual acceptance remains pending; automated checks do not establish usability-study outcomes.
